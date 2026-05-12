@@ -557,3 +557,6 @@ Ruby on Railsは開発速度が速く、個人開発のWebサービスに適し�
 
   画面遷移図
   https://www.figma.com/design/sZH4mLRtlI2bEcIzTdQOft/%E5%8D%92%E6%A5%AD%E5%88%B6%E4%BD%9C%E3%81%AE%E7%94%BB%E9%9D%A2%E9%81%B7%E7%A7%BB%E5%9B%B3?node-id=0-1&t=WZcuDEoPTs7hJItY-1
+
+  ER図
+  [![Image from Gyazo](https://i.gyazo.com/47ace02ff9eea5775cac6bdb25b59e6f.png)](https://gyazo.com/47ace02ff9eea5775cac6bdb25b59e6f)
