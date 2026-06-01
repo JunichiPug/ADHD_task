@@ -1,7 +1,122 @@
-<h1>ルーチン一覧</h1>
+<main class="max-w-5xl mx-auto px-container-padding py-stack-gap-lg">
 
-<% @routines.each do |routine| %>
-  <div>
-    <h3><%= routine.title %></h3>
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-stack-gap-md px-6">
+
+    <% if @routines.present? %>
+      <% @routines.each do |routine| %>
+        
+        <%# 確かな根拠（エビデンス）に基づいた条件分岐 %>
+        <%# 進捗率(progress_rate)に応じて、枠線の色やボタンの出し分けを制御します %>
+        <% if routine.progress_rate == 100 %>
+          <%# --- 【パターンA】完了（100%）のカード --- %>
+          <div class="bg-surface-container-lowest rounded-xl p-stack-gap-md shadow-[0_4px_20px_rgba(0,0,0,0.05)] border-l-8 border-secondary flex flex-col justify-between hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] transition-shadow duration-300 min-h-[220px]">
+            <div class="flex justify-between items-start mb-stack-gap-md">
+              <div>
+                <h3 class="font-headline-md text-headline-md text-on-surface mb-unit"><%= routine.title %></h3>
+                <div class="flex items-center gap-unit text-outline font-label-lg text-label-lg">
+                  <span class="material-symbols-outlined text-[18px]">schedule</span>
+                  <span><%= routine.estimated_time || "??" %> 分</span>
+                </div>
+              </div>
+              <div class="relative w-16 h-16">
+                <svg class="donut-chart w-16 h-16" viewBox="0 0 36 36">
+                  <circle class="stroke-surface-container-highest" cx="18" cy="18" fill="transparent" r="16" stroke-width="4"></circle>
+                  <circle class="stroke-secondary" cx="18" cy="18" fill="transparent" r="16" stroke-dasharray="100, 100" stroke-linecap="round" stroke-width="4"></circle>
+                </svg>
+                <div class="absolute inset-0 flex items-center justify-center text-secondary">
+                  <span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'wght' 700;">check</span>
+                </div>
+              </div>
+            </div>
+
+        <% elsif routine.progress_rate > 0 %>
+          <%# --- 【パターンB】進行中（1%〜99%）のカード --- %>
+          <div class="bg-surface-container-lowest rounded-xl p-stack-gap-md shadow-[0_4px_20px_rgba(0,0,0,0.05)] border-l-8 border-primary flex flex-col justify-between hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] transition-shadow duration-300 min-h-[220px] relative">
+            <div class="flex justify-between items-start mb-stack-gap-md">
+              <div>
+                <h3 class="font-headline-md text-headline-md text-on-surface mb-unit"><%= routine.title %></h3>
+                <div class="flex items-center gap-unit text-outline font-label-lg text-label-lg">
+                  <span class="material-symbols-outlined text-[18px]">schedule</span>
+                  <span><%= routine.estimated_time || "??" %> 分</span>
+                </div>
+              </div>
+              <div class="relative w-16 h-16">
+                <svg class="donut-chart w-16 h-16" viewBox="0 0 36 36">
+                  <circle class="stroke-surface-container-highest" cx="18" cy="18" fill="transparent" r="16" stroke-width="4"></circle>
+                  <circle class="stroke-primary" cx="18" cy="18" fill="transparent" r="16" stroke-dasharray="<%= routine.progress_rate %>, 100" stroke-linecap="round" stroke-width="4"></circle>
+                </svg>
+                <div class="absolute inset-0 flex items-center justify-center font-label-lg text-[12px] text-primary"><%= routine.progress_rate %>%</div>
+              </div>
+            </div>
+
+        <% else %>
+          <%# --- 【パターンC】未着手（0%）のカード --- %>
+          <div class="bg-surface-container-lowest rounded-xl p-stack-gap-md shadow-[0_4px_20px_rgba(0,0,0,0.05)] border-l-8 border-tertiary-container flex flex-col justify-between hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] transition-shadow duration-300 min-h-[220px]">
+            <div class="flex justify-between items-start mb-stack-gap-md">
+              <div>
+                <h3 class="font-headline-md text-headline-md text-on-surface mb-unit"><%= routine.title %></h3>
+                <div class="flex items-center gap-unit text-outline font-label-lg text-label-lg">
+                  <span class="material-symbols-outlined text-[18px]">schedule</span>
+                  <span><%= routine.estimated_time || "??" %> 分</span>
+                </div>
+              </div>
+              <div class="relative w-16 h-16">
+                <svg class="donut-chart w-16 h-16" viewBox="0 0 36 36">
+                  <circle class="stroke-surface-container-highest" cx="18" cy="18" fill="transparent" r="16" stroke-width="4"></circle>
+                  <circle class="stroke-tertiary" cx="18" cy="18" fill="transparent" r="16" stroke-dasharray="0, 100" stroke-linecap="round" stroke-width="4"></circle>
+                </svg>
+                <div class="absolute inset-0 flex items-center justify-center font-label-lg text-[12px] text-tertiary">0%</div>
+              </div>
+            </div>
+        <% end %>
+
+            <%# --- 全カード共通：アクションボタン（編集・削除） --- %>
+            <div class="flex gap-unit mb-stack-gap-sm px-1">
+              <%# 編集ボタンのパス（edit_routine_path）は環境に合わせて調整してください %>
+              <%= link_to edit_routine_path(routine), class: "w-10 h-10 rounded-full flex items-center justify-center text-outline hover:bg-surface-container hover:text-primary transition-all duration-200 border border-transparent hover:border-outline-variant" do %>
+                <span class="material-symbols-outlined text-[20px]">edit</span>
+              <% end %>
+              
+              <%# 削除ボタン %>
+              <%= button_to routine_path(routine), method: :delete, data: { confirm: "本当に削除しますか？" }, class: "w-10 h-10 rounded-full flex items-center justify-center text-outline hover:bg-error-container hover:text-error transition-all duration-200 border border-transparent hover:border-error" do %>
+                <span class="material-symbols-outlined text-[20px]">delete</span>
+              <% end %>
+            </div>
+
+            <%# --- 全カード共通：下部（進捗テキストとメインボタン） --- %>
+            <div class="flex items-center justify-between mt-auto pt-stack-gap-md">
+              <% if routine.progress_rate == 100 %>
+                <span class="font-body-md text-body-md text-secondary font-bold">完了</span>
+                <button class="border-2 border-outline text-outline px-stack-gap-lg py-stack-gap-sm rounded-full font-label-lg text-label-lg hover:bg-surface-container transition-colors flex items-center gap-unit h-[56px]">
+                  <span class="material-symbols-outlined">refresh</span>リセット
+                </button>
+              <% elsif routine.progress_rate > 0 %>
+                <span class="font-body-md text-body-md text-outline"><%= routine.completed_tasks_count %>/<%= routine.tasks.count %> 完了したタスク</span>
+                <button class="bg-primary text-on-primary px-stack-gap-lg py-stack-gap-sm rounded-full font-label-lg text-label-lg hover:opacity-90 transition-opacity flex items-center gap-unit h-[56px]">
+                  <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">play_arrow</span>つづける
+                </button>
+              <% else %>
+                <span class="font-body-md text-body-md text-outline"><%= routine.completed_tasks_count %>/<%= routine.tasks.count %> 完了したタスク</span>
+                <button class="border-2 border-primary text-primary px-stack-gap-lg py-stack-gap-sm rounded-full font-label-lg text-label-lg hover:bg-primary-container/20 transition-colors flex items-center gap-unit h-[56px]">
+                  <span class="material-symbols-outlined">play_arrow</span>はじめる
+                </button>
+              <% end %>
+            </div>
+
+          </div> <%# 各カードの閉じタグ %>
+
+      <% end %>
+    <% end %>
+
+    <%# new_routine_path はプロジェクトのルーチン新規作成パスに合わせてください %>
+    <%= link_to new_routine_path, class: "bg-surface-container-lowest rounded-xl p-stack-gap-md shadow-[0_4px_20px_rgba(0,0,0,0.05)] border-l-8 border-outline-variant flex flex-col items-center justify-center hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] transition-all duration-300 aspect-square w-full max-w-[250px] mr-auto cursor-pointer group" do %>
+      <div class="flex flex-col items-center gap-stack-gap-sm">
+        <div class="w-12 h-12 rounded-full bg-surface-container flex items-center justify-center text-outline group-hover:bg-primary group-hover:text-on-primary transition-colors">
+  <span class="material-symbols-outlined text-[32px]">calendar_month</span> <%# 👈 アイコンをカレンダーに変更 %>
+</div>
+<h3 class="font-headline-md text-headline-md text-on-surface-variant group-hover:text-primary transition-colors">ルーティンを追加</h3> <%# 👈 文字を「予定を追加」に変更 %>
+      </div>
+    <% end %>
+
   </div>
-<% end %>
+</main>
