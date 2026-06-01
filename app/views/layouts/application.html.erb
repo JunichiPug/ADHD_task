@@ -2,8 +2,10 @@
 <html>
   <head>
     <title><%= content_for(:title) || "Myapp" %></title>
+
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="apple-mobile-web-app-capable" content="yes">
+
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
 
@@ -13,11 +15,38 @@
     <link rel="icon" href="/icon.png" type="image/png">
     <link rel="icon" href="/icon.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="/icon.png">
+
     <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
     <%= javascript_include_tag "application", "data-turbo-track": "reload", type: "module" %>
   </head>
 
-  <body>
-    <%= yield %>
+  <!-- ここがポイント（画面全体の背景） -->
+  <body class="bg-background text-on-background min-h-screen">
+
+    <!-- ヘッダー（全ページ共通） -->
+    <header class="w-full flex justify-between items-center px-6 py-4">
+
+      <!-- 左：アプリ名 -->
+      <div class="font-bold text-primary">
+        ひびまる
+      </div>
+
+      <!-- 右：ログアウト（ログイン時だけ表示） -->
+      <div>
+        <% if user_signed_in? %>
+          <%= button_to "ログアウト",
+              destroy_user_session_path,
+              method: :delete,
+              class: "text-sm text-red-500 hover:underline" %>
+        <% end %>
+      </div>
+
+    </header>
+
+    <!-- メイン画面（各ページの中身がここに入る） -->
+    <main class="p-6">
+      <%= yield %>
+    </main>
+
   </body>
 </html>

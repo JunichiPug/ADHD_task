@@ -121,7 +121,11 @@
          alt="ひびまるロゴ"
          style="width:250px; height:auto; margin:0 auto 4px; display:block; border-radius:12px;">
 <h1 class="font-headline-md text-3xl font-bold text-primary mb-2">ひびまる</h1>
-<p class="font-body-md text-body-md text-on-surface-variant">おかえりなさい。<br>
+<p class="font-body-md text-body-md text-on-surface-variant">毎日のルーティンを
+やさしく見える化<br>
+
+ドーナツグラフで
+今日やることをひと目で確認<br>
 自分のペースで、静かに始めましょう。</p>
 </header>
 <!-- Form Section -->
@@ -142,9 +146,9 @@
                             ログイン
                         </button>
 <div class="flex flex-col items-center space-y-stack-gap-sm pt-4">
-<button class="font-label-lg text-label-lg text-secondary hover:text-on-secondary-fixed-variant transition-colors underline decoration-secondary-container decoration-2 underline-offset-4">
-                                新規登録はこちら
-                            </button>
+<%= link_to "新規登録はこちら",
+    new_user_registration_path,
+    class: "font-label-lg text-label-lg text-secondary hover:text-on-secondary-fixed-variant transition-colors underline decoration-secondary-container decoration-2 underline-offset-4" %>
 
 </div>
 </div>
