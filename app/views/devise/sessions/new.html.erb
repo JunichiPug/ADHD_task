@@ -1,0 +1,39 @@
+<div style="text-align:center; margin-bottom:20px;">
+
+  <img src="/hibimaru_pug.png"
+       style="width:180px; display:block; margin:0 auto; border-radius:12px;">
+
+  <h1 style="font-size:28px; font-weight:bold; color:#725764;">
+    ひびまる
+  </h1>
+
+  <h2>Log in</h2>
+
+</div>
+
+<%= form_for(resource, as: resource_name, url: session_path(resource_name)) do |f| %>
+
+  <div class="field">
+    <p><%= f.label :email %></p>
+    <p><%= f.email_field :email, autofocus: true, autocomplete: "email" %></p>
+  </div>
+
+  <div class="field">
+    <p><%= f.label :password %></p>
+    <p><%= f.password_field :password, autocomplete: "current-password" %></p>
+  </div>
+
+  <% if devise_mapping.rememberable? %>
+    <div class="field">
+      <p><%= f.check_box :remember_me %></p>
+      <p><%= f.label :remember_me %></p>
+    </div>
+  <% end %>
+
+  <div class="actions">
+    <%= f.submit "Log in" %>
+  </div>
+
+<% end %>
+
+<%= render "devise/shared/links" %>
