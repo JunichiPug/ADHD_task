@@ -1,122 +1,199 @@
-<main class="max-w-5xl mx-auto px-container-padding py-stack-gap-lg">
+<%# 💡 フォントやTailwindカスタムカラーの設定 %>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@400;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 
-  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-stack-gap-md px-6">
+<style>
+  body {
+    font-family: 'Atkinson Hyperlegible Next', sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .material-symbols-outlined {
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  }
+  .donut-chart {
+    transform: rotate(-90deg);
+  }
+</style>
 
-    <% if @routines.present? %>
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        "colors": {
+          "secondary": "#566246",
+          "surface-variant": "#e4e2de",
+          "on-surface": "#1b1c1a",
+          "on-tertiary": "#ffffff",
+          "secondary-container": "#dae8c3",
+          "tertiary-fixed": "#d3e5f0",
+          "primary-container": "#f9d5e5",
+          "secondary-fixed": "#dae8c3",
+          "surface": "#fbf9f5",
+          "error-container": "#ffdad6",
+          "on-secondary-fixed-variant": "#3f4b30",
+          "surface-container": "#efeeea",
+          "error": "#ba1a1a",
+          "on-secondary": "#ffffff",
+          "on-tertiary-container": "#53646e",
+          "surface-dim": "#dbdad6",
+          "surface-tint": "#725764",
+          "surface-container-highest": "#e4e2de",
+          "on-tertiary-fixed-variant": "#384952",
+          "inverse-surface": "#30312e",
+          "primary-fixed": "#fdd9e9",
+          "on-secondary-container": "#5c694b",
+          "on-primary-fixed": "#2a1520",
+          "outline-variant": "#d1c3c8",
+          "outline": "#7f7478",
+          "on-primary-fixed-variant": "#593f4c",
+          "background": "#fbf9f5",
+          "on-primary": "#ffffff",
+          "on-secondary-fixed": "#141f08",
+          "surface-container-high": "#eae8e4",
+          "inverse-on-surface": "#f2f0ed",
+          "primary-fixed-dim": "#e0bdcd",
+          "on-error": "#ffffff",
+          "tertiary": "#50616a",
+          "surface-container-lowest": "#ffffff",
+          "on-primary-container": "#765a68",
+          "primary": "#725764",
+          "surface-container-low": "#f5f3ef",
+          "surface-bright": "#fbf9f5",
+          "on-error-container": "#93000a",
+          "tertiary-fixed-dim": "#b7c9d4",
+          "on-background": "#1b1c1a",
+          "tertiary-container": "#cfe1ec",
+          "inverse-primary": "#e0bdcd",
+          "on-surface-variant": "#4e4448",
+          "secondary-fixed-dim": "#becba8",
+          "on-tertiary-fixed": "#0c1e25"
+        },
+        "borderRadius": {
+          "DEFAULT": "0.25rem",
+          "lg": "0.5rem",
+          "xl": "0.75rem",
+          "full": "999px"
+        },
+        "spacing": {
+          "gutter": "16px",
+          "stack-gap-md": "24px",
+          "container-padding": "24px",
+          "unit": "8px",
+          "stack-gap-sm": "12px",
+          "stack-gap-lg": "40px"
+        }
+      }
+    }
+  }
+</script>
+
+<div class="bg-background text-on-background min-h-screen pb-32">
+  <header class="w-full top-0 flex justify-between items-center px-container-padding py-stack-gap-sm bg-surface sticky z-50 border-b border-surface-variant">
+    <div class="flex items-center gap-unit text-on-secondary-fixed-variant opacity-0" aria-hidden="true">
+      <span class="material-symbols-outlined text-[20px]">chevron_left</span>
+      <span class="text-sm font-semibold">戻る</span>
+    </div>
+    
+    <div class="text-2xl font-bold text-primary">ひびまる</div>
+    
+    <div class="flex items-center gap-stack-gap-md opacity-0" aria-hidden="true">
+      <span class="material-symbols-outlined">account_circle</span>
+    </div>
+  </header>
+
+  <main class="max-w-5xl mx-auto px-container-padding py-stack-gap-lg">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-stack-gap-md">
+      
       <% @routines.each do |routine| %>
+        <% rate = routine.progress_rate %>
+        <% total_duration = routine.tasks.sum(:duration) || 0 %>
         
-        <%# 確かな根拠（エビデンス）に基づいた条件分岐 %>
-        <%# 進捗率(progress_rate)に応じて、枠線の色やボタンの出し分けを制御します %>
-        <% if routine.progress_rate == 100 %>
-          <%# --- 【パターンA】完了（100%）のカード --- %>
-          <div class="bg-surface-container-lowest rounded-xl p-stack-gap-md shadow-[0_4px_20px_rgba(0,0,0,0.05)] border-l-8 border-secondary flex flex-col justify-between hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] transition-shadow duration-300 min-h-[220px]">
-            <div class="flex justify-between items-start mb-stack-gap-md">
-              <div>
-                <h3 class="font-headline-md text-headline-md text-on-surface mb-unit"><%= routine.title %></h3>
-                <div class="flex items-center gap-unit text-outline font-label-lg text-label-lg">
-                  <span class="material-symbols-outlined text-[18px]">schedule</span>
-                  <span><%= routine.estimated_time || "??" %> 分</span>
-                </div>
+        <% border_color = if rate == 100
+                            "border-secondary"
+                          elsif rate > 0
+                            "border-primary"
+                          else
+                            "border-tertiary-container"
+                          end %>
+
+        <div class="bg-surface-container-lowest rounded-xl p-stack-gap-md shadow-[0_4px_20px_rgba(0,0,0,0.05)] border-l-8 <%= border_color %> flex flex-col justify-between hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] transition-shadow duration-300 min-h-[220px] relative">
+          <div class="flex justify-between items-start mb-stack-gap-md">
+            <div>
+              <h3 class="text-xl font-bold text-on-surface mb-unit"><%= routine.title %></h3>
+              <div class="flex items-center gap-unit text-outline text-sm font-semibold">
+                <span class="material-symbols-outlined text-[18px]">schedule</span>
+                <span><%= total_duration %> 分</span>
               </div>
-              <div class="relative w-16 h-16">
-                <svg class="donut-chart w-16 h-16" viewBox="0 0 36 36">
-                  <circle class="stroke-surface-container-highest" cx="18" cy="18" fill="transparent" r="16" stroke-width="4"></circle>
-                  <circle class="stroke-secondary" cx="18" cy="18" fill="transparent" r="16" stroke-dasharray="100, 100" stroke-linecap="round" stroke-width="4"></circle>
-                </svg>
-                <div class="absolute inset-0 flex items-center justify-center text-secondary">
+            </div>
+
+            <div class="relative w-16 h-16">
+              <svg class="donut-chart w-16 h-16" viewBox="0 0 36 36">
+                <circle class="stroke-surface-container-highest" cx="18" cy="18" fill="transparent" r="16" stroke-width="4"></circle>
+                <% stroke_color = rate == 100 ? "stroke-secondary" : (rate > 0 ? "stroke-primary" : "stroke-tertiary") %>
+                <circle class="<%= stroke_color %>" cx="18" cy="18" fill="transparent" r="16" stroke-dasharray="<%= rate %>, 100" stroke-linecap="round" stroke-width="4"></circle>
+              </svg>
+              <div class="absolute inset-0 flex items-center justify-center text-sm font-semibold <%= rate == 100 ? 'text-secondary' : (rate > 0 ? 'text-primary' : 'text-tertiary') %>">
+                <% if rate == 100 %>
                   <span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'wght' 700;">check</span>
-                </div>
+                <% else %>
+                  <%= rate %>%
+                <% end %>
               </div>
             </div>
+          </div>
 
-        <% elsif routine.progress_rate > 0 %>
-          <%# --- 【パターンB】進行中（1%〜99%）のカード --- %>
-          <div class="bg-surface-container-lowest rounded-xl p-stack-gap-md shadow-[0_4px_20px_rgba(0,0,0,0.05)] border-l-8 border-primary flex flex-col justify-between hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] transition-shadow duration-300 min-h-[220px] relative">
-            <div class="flex justify-between items-start mb-stack-gap-md">
-              <div>
-                <h3 class="font-headline-md text-headline-md text-on-surface mb-unit"><%= routine.title %></h3>
-                <div class="flex items-center gap-unit text-outline font-label-lg text-label-lg">
-                  <span class="material-symbols-outlined text-[18px]">schedule</span>
-                  <span><%= routine.estimated_time || "??" %> 分</span>
-                </div>
-              </div>
-              <div class="relative w-16 h-16">
-                <svg class="donut-chart w-16 h-16" viewBox="0 0 36 36">
-                  <circle class="stroke-surface-container-highest" cx="18" cy="18" fill="transparent" r="16" stroke-width="4"></circle>
-                  <circle class="stroke-primary" cx="18" cy="18" fill="transparent" r="16" stroke-dasharray="<%= routine.progress_rate %>, 100" stroke-linecap="round" stroke-width="4"></circle>
-                </svg>
-                <div class="absolute inset-0 flex items-center justify-center font-label-lg text-[12px] text-primary"><%= routine.progress_rate %>%</div>
-              </div>
-            </div>
+          <div class="flex gap-unit mb-stack-gap-sm px-1">
+            <%= link_to edit_routine_path(routine), class: "w-10 h-10 rounded-full flex items-center justify-center text-outline hover:bg-surface-container hover:text-primary transition-all duration-200 border border-transparent hover:border-outline-variant" do %>
+              <span class="material-symbols-outlined text-[20px]">edit</span>
+            <% end %>
+            <%= link_to routine_path(routine), data: { turbo_method: :delete, turbo_confirm: "本当に削除しますか？" }, class: "w-10 h-10 rounded-full flex items-center justify-center text-outline hover:bg-error-container hover:text-error transition-all duration-200 border border-transparent hover:border-error" do %>
+              <span class="material-symbols-outlined text-[20px]">delete</span>
+            <% end %>
+          </div>
 
-        <% else %>
-          <%# --- 【パターンC】未着手（0%）のカード --- %>
-          <div class="bg-surface-container-lowest rounded-xl p-stack-gap-md shadow-[0_4px_20px_rgba(0,0,0,0.05)] border-l-8 border-tertiary-container flex flex-col justify-between hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] transition-shadow duration-300 min-h-[220px]">
-            <div class="flex justify-between items-start mb-stack-gap-md">
-              <div>
-                <h3 class="font-headline-md text-headline-md text-on-surface mb-unit"><%= routine.title %></h3>
-                <div class="flex items-center gap-unit text-outline font-label-lg text-label-lg">
-                  <span class="material-symbols-outlined text-[18px]">schedule</span>
-                  <span><%= routine.estimated_time || "??" %> 分</span>
-                </div>
-              </div>
-              <div class="relative w-16 h-16">
-                <svg class="donut-chart w-16 h-16" viewBox="0 0 36 36">
-                  <circle class="stroke-surface-container-highest" cx="18" cy="18" fill="transparent" r="16" stroke-width="4"></circle>
-                  <circle class="stroke-tertiary" cx="18" cy="18" fill="transparent" r="16" stroke-dasharray="0, 100" stroke-linecap="round" stroke-width="4"></circle>
-                </svg>
-                <div class="absolute inset-0 flex items-center justify-center font-label-lg text-[12px] text-tertiary">0%</div>
-              </div>
-            </div>
-        <% end %>
-
-            <%# --- 全カード共通：アクションボタン（編集・削除） --- %>
-            <div class="flex gap-unit mb-stack-gap-sm px-1">
-              <%# 編集ボタンのパス（edit_routine_path）は環境に合わせて調整してください %>
-              <%= link_to edit_routine_path(routine), class: "w-10 h-10 rounded-full flex items-center justify-center text-outline hover:bg-surface-container hover:text-primary transition-all duration-200 border border-transparent hover:border-outline-variant" do %>
-                <span class="material-symbols-outlined text-[20px]">edit</span>
-              <% end %>
-              
-              <%# 削除ボタン %>
-              <%= button_to routine_path(routine), method: :delete, data: { confirm: "本当に削除しますか？" }, class: "w-10 h-10 rounded-full flex items-center justify-center text-outline hover:bg-error-container hover:text-error transition-all duration-200 border border-transparent hover:border-error" do %>
-                <span class="material-symbols-outlined text-[20px]">delete</span>
-              <% end %>
-            </div>
-
-            <%# --- 全カード共通：下部（進捗テキストとメインボタン） --- %>
-            <div class="flex items-center justify-between mt-auto pt-stack-gap-md">
-              <% if routine.progress_rate == 100 %>
-                <span class="font-body-md text-body-md text-secondary font-bold">完了</span>
-                <button class="border-2 border-outline text-outline px-stack-gap-lg py-stack-gap-sm rounded-full font-label-lg text-label-lg hover:bg-surface-container transition-colors flex items-center gap-unit h-[56px]">
-                  <span class="material-symbols-outlined">refresh</span>リセット
-                </button>
-              <% elsif routine.progress_rate > 0 %>
-                <span class="font-body-md text-body-md text-outline"><%= routine.completed_tasks_count %>/<%= routine.tasks.count %> 完了したタスク</span>
-                <button class="bg-primary text-on-primary px-stack-gap-lg py-stack-gap-sm rounded-full font-label-lg text-label-lg hover:opacity-90 transition-opacity flex items-center gap-unit h-[56px]">
-                  <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">play_arrow</span>つづける
-                </button>
-              <% else %>
-                <span class="font-body-md text-body-md text-outline"><%= routine.completed_tasks_count %>/<%= routine.tasks.count %> 完了したタスク</span>
-                <button class="border-2 border-primary text-primary px-stack-gap-lg py-stack-gap-sm rounded-full font-label-lg text-label-lg hover:bg-primary-container/20 transition-colors flex items-center gap-unit h-[56px]">
-                  <span class="material-symbols-outlined">play_arrow</span>はじめる
-                </button>
-              <% end %>
-            </div>
-
-          </div> <%# 各カードの閉じタグ %>
-
+          <div class="flex items-center justify-between mt-auto pt-stack-gap-md">
+            <% if rate == 100 %>
+              <span class="text-body-md text-secondary font-bold">完了</span>
+              <button class="border-2 border-outline text-outline px-stack-gap-lg py-stack-gap-sm rounded-full text-sm font-semibold hover:bg-surface-container transition-colors flex items-center gap-unit h-[56px]">
+                <span class="material-symbols-outlined">refresh</span>リセット
+              </button>
+            <% elsif rate > 0 %>
+              <span class="text-body-md text-outline"><%= routine.completed_tasks_count %>/<%= routine.tasks.count %> 完了したタスク</span>
+              <button class="bg-primary text-on-primary px-stack-gap-lg py-stack-gap-sm rounded-full text-sm font-semibold hover:opacity-90 transition-opacity flex items-center gap-unit h-[56px]">
+                <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">play_arrow</span>つづける
+              </button>
+            <% else %>
+              <span class="text-body-md text-outline"><%= routine.completed_tasks_count %>/<%= routine.tasks.count %> 完了したタスク</span>
+              <button class="border-2 border-primary text-primary px-stack-gap-lg py-stack-gap-sm rounded-full text-sm font-semibold hover:bg-primary-container/20 transition-colors flex items-center gap-unit h-[56px]">
+                <span class="material-symbols-outlined">play_arrow</span>はじめる
+              </button>
+            <% end %>
+          </div>
+        </div>
       <% end %>
-    <% end %>
 
-    <%# new_routine_path はプロジェクトのルーチン新規作成パスに合わせてください %>
-    <%= link_to new_routine_path, class: "bg-surface-container-lowest rounded-xl p-stack-gap-md shadow-[0_4px_20px_rgba(0,0,0,0.05)] border-l-8 border-outline-variant flex flex-col items-center justify-center hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] transition-all duration-300 aspect-square w-full max-w-[250px] mr-auto cursor-pointer group" do %>
-      <div class="flex flex-col items-center gap-stack-gap-sm">
-        <div class="w-12 h-12 rounded-full bg-surface-container flex items-center justify-center text-outline group-hover:bg-primary group-hover:text-on-primary transition-colors">
-  <span class="material-symbols-outlined text-[32px]">calendar_month</span> <%# 👈 アイコンをカレンダーに変更 %>
+      <%= link_to new_routine_path, class: "bg-surface-container-lowest rounded-xl p-stack-gap-md shadow-[0_4px_20px_rgba(0,0,0,0.05)] border-l-8 border-outline-variant flex flex-col items-center justify-center hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] transition-all duration-300 min-h-[220px] cursor-pointer group" do %>
+        <div class="flex flex-col items-center gap-stack-gap-sm">
+          <div class="w-12 h-12 rounded-full bg-surface-container flex items-center justify-center text-outline group-hover:bg-primary group-hover:text-on-primary transition-colors">
+            <span class="material-symbols-outlined text-[32px]">add</span>
+          </div>
+          <h3 class="text-xl font-bold text-on-surface-variant group-hover:text-primary transition-colors">ルーチンを追加</h3>
+        </div>
+      <% end %>
+
+    </div>
+  </main>
+
+  <nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center py-stack-gap-sm bg-surface-container border-t border-surface-variant shadow-sm">
+    <a class="flex flex-col items-center justify-center bg-primary-container text-on-primary-container rounded-full px-6 py-2 transition-all duration-150" href="#">
+      <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">dashboard</span>
+      <span class="text-sm font-semibold mt-1">ルーチン</span>
+    </a>
+    <a class="flex flex-col items-center justify-center text-outline px-6 py-2 transition-all duration-150 hover:text-primary" href="#">
+      <span class="material-symbols-outlined">note_alt</span>
+      <span class="text-sm font-semibold mt-1">覚書き</span>
+    </a>
+  </nav>
 </div>
-<h3 class="font-headline-md text-headline-md text-on-surface-variant group-hover:text-primary transition-colors">ルーティンを追加</h3> <%# 👈 文字を「予定を追加」に変更 %>
-      </div>
-    <% end %>
-
-  </div>
-</main>

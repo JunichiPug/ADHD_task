@@ -1,0 +1,123 @@
+<div class="relative flex h-auto min-h-screen w-full flex-col bg-background group/design-root overflow-x-hidden">
+  <div class="layout-container flex h-full grow flex-col">
+    <div class="flex flex-1 justify-center py-5">
+      <div class="layout-content-container flex flex-col max-w-[960px] flex-1 px-4 lg:px-10">
+        
+        <header class="flex items-center justify-between whitespace-nowrap border-b border-solid border-outline-variant py-3 mb-6">
+          <div class="flex items-center text-on-surface gap-2">
+            <div class="size-6 text-primary">
+              <svg fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+                <path d="M42.4379 44C42.4379 44 36.0744 33.9038 41.1692 24C46.8624 12.9336 42.2078 4 42.2078 4L7.01134 4C7.01134 4 11.6577 12.932 5.96912 23.9969C0.876273 33.9029 7.27094 44 7.27094 44L42.4379 44Z" fill="currentColor"></path>
+              </svg>
+            </div>
+            <h2 class="text-on-surface text-headline-md font-bold leading-tight tracking-[-0.015em]">ルーチンの作成</h2>
+          </div>
+          <%= link_to routines_path, class: "flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-6 bg-surface-container-high text-on-surface text-label-lg font-bold hover:bg-surface-container-highest transition-colors" do %>
+            <span class="truncate">キャンセル</span>
+          <% end %>
+        </header>
+
+        <%= form_with(model: @routine, local: true) do |f| %>
+          <div class="flex flex-col gap-stack-md mb-stack-lg">
+            <div class="flex flex-wrap items-end gap-4">
+              <label class="flex flex-col min-w-[320px] flex-1">
+                <p class="text-on-surface-variant text-label-lg font-medium pb-2">ルーチン名</p>
+                <%= f.text_field :title, class: "form-input flex w-full rounded-lg text-on-surface focus:outline-0 focus:ring-2 focus:ring-primary border border-outline-variant bg-surface-container-lowest h-14 p-4 text-body-md", placeholder: "例: 朝の準備" %>
+              </label>
+            </div>
+          </div>
+
+          <div class="flex flex-col gap-stack-sm mb-stack-lg">
+            <div class="flex items-center justify-between px-2 mb-2">
+              <h3 class="text-on-surface text-headline-md font-bold tracking-[-0.015em]">タスクリスト</h3>
+            </div>
+
+            <div id="task-fields-container" class="flex flex-col gap-4">
+              <%= f.fields_for :tasks do |task_form| %>
+                <div class="nested-fields flex items-center gap-4 bg-surface-container-lowest p-4 rounded-xl border border-surface-container-highest w-full">
+                  <div class="cursor-grab text-outline-variant hover:text-outline p-2">
+                    <span class="material-symbols-outlined">drag_indicator</span>
+                  </div>
+                  
+                  <div class="flex-1">
+                    <%= task_form.text_field :title, class: "w-full bg-transparent border-none focus:ring-0 text-body-lg p-0", placeholder: "新しいタスクを入力..." %>
+                    
+                    <div class="flex items-center gap-2 mt-2">
+                      <div class="flex items-center bg-surface-container-high rounded-lg px-3 py-1.5 border border-outline-variant/30">
+                        <%= task_form.number_field :duration, min: 0, class: "w-12 bg-transparent border-none p-0 text-body-md font-medium text-on-surface focus:ring-0 text-center", placeholder: "0" %>
+                        <span class="text-on-surface-variant text-label-sm font-medium">分</span>
+                      </div>
+                      <span class="text-on-surface-variant text-label-sm">所要時間</span>
+                    </div>
+                  </div>
+                </div>
+              <% end %>
+            </div>
+          </div>
+
+          <template id="task-template">
+            <%= f.fields_for :tasks, Task.new, child_index: "NEW_RECORD" do |task_form| %>
+              <div class="nested-fields flex items-center gap-4 bg-surface-container-lowest p-4 rounded-xl border border-surface-container-highest w-full mt-4">
+                <div class="cursor-grab text-outline-variant hover:text-outline p-2">
+                  <span class="material-symbols-outlined">drag_indicator</span>
+                </div>
+                <div class="flex-1">
+                  <%= task_form.text_field :title, class: "w-full bg-transparent border-none focus:ring-0 text-body-lg p-0", placeholder: "新しいタスクを入力..." %>
+                  <div class="flex items-center gap-2 mt-2">
+                    <div class="flex items-center bg-surface-container-high/50 rounded-lg px-3 py-1.5 border border-outline-variant/30">
+                      <%= task_form.number_field :duration, min: 0, class: "w-12 bg-transparent border-none p-0 text-body-md font-medium text-on-surface focus:ring-0 text-center", placeholder: "0" %>
+                      <span class="text-on-surface-variant text-label-sm font-medium">分</span>
+                    </div>
+                    <span class="text-on-surface-variant text-label-sm">所要時間</span>
+                  </div>
+                </div>
+              </div>
+            <% end %>
+          </template>
+
+          <footer class="flex flex-col gap-4 py-8 border-t border-outline-variant mt-stack-md">
+            <button type="button" id="add-task-button" class="flex items-center justify-center gap-2 text-primary font-bold text-label-lg px-4 py-3 rounded-full hover:bg-primary-container transition-colors border border-primary/20 bg-primary-container/10 mb-2">
+              <span class="material-symbols-outlined">add_circle</span>
+              タスクを追加
+            </button>
+            
+            <%= f.button class: "w-full bg-primary text-on-primary h-14 rounded-full font-bold text-body-lg flex items-center justify-center gap-2 shadow-sm hover:opacity-90 active:scale-[0.98] transition-all" do %>
+              <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">save</span>
+              変更を保存する
+            <% end %>
+          </footer>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+
+<script>
+  // テンプレートからHTMLを取得して動的にタスクを追加する処理
+  document.getElementById('add-task-button')?.addEventListener('click', function() {
+    const container = document.getElementById('task-fields-container');
+    const template = document.getElementById('task-template');
+    
+    if (container && template) {
+      const timeStamp = new Date().getTime();
+      let htmlString = template.innerHTML;
+      // ダミーのIDである 'NEW_RECORD' を現在のタイムスタンプ（一意の数値）に置き換える
+      const html = htmlString.replace(/NEW_RECORD/g, timeStamp);
+      container.insertAdjacentHTML('beforeend', html);
+    }
+  });
+
+  // SortableJS によるドラッグ＆ドロップの有効化
+  document.addEventListener("turbo:load", function() {
+    const container = document.getElementById('task-fields-container');
+    if (container) {
+      Sortable.create(container, {
+        handle: '.cursor-grab',
+        animation: 150,
+        ghostClass: 'opacity-50'
+      });
+    }
+  });
+</script>
