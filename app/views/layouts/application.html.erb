@@ -11,6 +11,31 @@
 
     <%= yield :head %>
 
+    <!-- ★ここが重要 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- ② ★ここに入れる（重要） -->
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              background: "#fbf9f5",
+              "on-background": "#1b1c1a",
+              primary: "#725764",
+              "on-primary": "#ffffff",
+              secondary: "#566246",
+              surface: "#fbf9f5",
+              "surface-container-lowest": "#ffffff",
+              "surface-container": "#efeeea",
+              "surface-variant": "#e4e2de",
+              error: "#ba1a1a"
+            }
+          }
+        }
+      }
+    </script>
+
     <link rel="manifest" href="/manifest.json">
     <link rel="icon" href="/icon.png" type="image/png">
     <link rel="icon" href="/icon.svg" type="image/svg+xml">

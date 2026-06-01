@@ -1,39 +1,92 @@
-<div style="text-align:center; margin-bottom:20px;">
 
-  <img src="/hibimaru_pug.png"
-       style="width:180px; display:block; margin:0 auto; border-radius:12px;">
+<div class="min-h-screen flex items-center justify-center p-container-padding bg-background">
 
-  <h1 style="font-size:28px; font-weight:bold; color:#725764;">
-    ひびまる
-  </h1>
+  <!-- Main Container -->
+  <main class="w-full max-w-md bg-surface-container-lowest rounded-xl overflow-hidden soft-outline mx-auto">
 
-  <h2>Log in</h2>
+    <div class="flex flex-col justify-center items-center p-stack-gap-lg bg-surface">
+
+      <div class="w-full max-w-sm">
+
+        <!-- Brand Header -->
+        <header class="text-center mb-stack-gap-lg">
+
+          <img src="/hibimaru_pug.png"
+               alt="ひびまるロゴ"
+               style="width:250px; height:auto; margin:0 auto 4px; display:block; border-radius:12px;">
+
+          <h1 class="font-headline-md text-3xl font-bold text-primary mb-2">ひびまる</h1>
+
+          <p class="font-body-md text-body-md text-on-surface-variant">
+            毎日のルーティンを<br>
+            やさしく見える化<br><br>
+
+            
+          </p>
+
+        </header>
+
+        <!-- FORM（ここが最重要：Devise接続部分） -->
+        <%= form_for(resource, as: resource_name, url: session_path(resource_name)) do |f| %>
+
+          <!-- Email Field -->
+          <div class="space-y-1 mb-4 pt-4">
+            <label class="block font-label-lg text-label-lg text-on-surface-variant">
+              メールアドレス
+            </label>
+
+            <%= f.email_field :email,
+              id: "email",
+              placeholder: "example@steadyflow.jp",
+              class: "w-full px-4 py-3 bg-surface-container-lowest border-2 border-transparent focus:border-primary-container focus:ring-0 rounded-lg transition-all duration-300 font-body-md text-on-surface placeholder:text-outline-variant soft-outline" %>
+          </div>
+
+          <!-- Password Field -->
+          <div class="space-y-1 mb-6">
+            <label class="block font-label-lg text-label-lg text-on-surface-variant">
+              パスワード
+            </label>
+
+            <%= f.password_field :password,
+              id: "password",
+              placeholder: "••••••••",
+              class: "w-full px-4 py-3 bg-surface-container-lowest border-2 border-transparent focus:border-primary-container focus:ring-0 rounded-lg transition-all duration-300 font-body-md text-on-surface placeholder:text-outline-variant soft-outline" %>
+          </div>
+
+          <!-- Login Button -->
+          <div class="flex flex-col space-y-gutter pt-2">
+
+            <%= f.submit "ログイン",
+              class: "w-full py-4 bg-primary text-on-primary font-label-lg text-label-lg rounded-full hover:opacity-90 active:scale-[0.98] transition-all duration-300 shadow-sm cursor-pointer" %>
+
+            <!-- Signup -->
+            <div class="flex flex-col items-center space-y-stack-gap-sm pt-4">
+
+              <%= link_to "新規登録はこちら",
+                  new_user_registration_path,
+                  class: "font-label-lg text-label-lg text-secondary hover:text-on-secondary-fixed-variant transition-colors underline decoration-secondary-container decoration-2 underline-offset-4" %>
+
+            </div>
+
+          </div>
+
+        <% end %>
+
+      </div>
+
+      <!-- Footer -->
+      <footer class="mt-stack-gap-lg mt-6 text-center opacity-60">
+        <p class="font-label-sm text-label-sm text-outline">
+          © 2026 JunichiPug
+        </p>
+      </footer>
+
+    </div>
+  </main>
 
 </div>
 
-<%= form_for(resource, as: resource_name, url: session_path(resource_name)) do |f| %>
+<!-- Decorative Soft Elements -->
+<div class="fixed top-12 left-12 w-32 h-32 bg-tertiary-container/20 rounded-full blur-2xl -z-10"></div>
+<div class="fixed bottom-12 right-12 w-48 h-48 bg-primary-container/20 rounded-full blur-3xl -z-10"></div>
 
-  <div class="field">
-    <p><%= f.label :email %></p>
-    <p><%= f.email_field :email, autofocus: true, autocomplete: "email" %></p>
-  </div>
-
-  <div class="field">
-    <p><%= f.label :password %></p>
-    <p><%= f.password_field :password, autocomplete: "current-password" %></p>
-  </div>
-
-  <% if devise_mapping.rememberable? %>
-    <div class="field">
-      <p><%= f.check_box :remember_me %></p>
-      <p><%= f.label :remember_me %></p>
-    </div>
-  <% end %>
-
-  <div class="actions">
-    <%= f.submit "Log in" %>
-  </div>
-
-<% end %>
-
-<%= render "devise/shared/links" %>
