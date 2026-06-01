@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_06_01_151852) do
+ActiveRecord::Schema[7.2].define(version: 2026_06_01_173150) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -39,6 +39,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_06_01_151852) do
     t.integer "current_position"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.integer "estimated_time"
     t.index ["user_id"], name: "index_routines_on_user_id"
   end
 
@@ -48,6 +49,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_06_01_151852) do
     t.bigint "routine_id", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.integer "duration"
     t.index ["routine_id"], name: "index_tasks_on_routine_id"
   end
 
