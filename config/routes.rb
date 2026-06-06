@@ -3,7 +3,10 @@ Rails.application.routes.draw do
 
   root "routines#index"
 
-  resources :routines
+  # 💡 変更点: resources :routines をブロック形式にして、start アクションを組み込みます
+  resources :routines do
+    get :start, on: :member
+  end
 
   get "up" => "rails/health#show", as: :rails_health_check
 

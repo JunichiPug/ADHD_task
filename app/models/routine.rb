@@ -1,16 +1,22 @@
 class Routine < ApplicationRecord
   belongs_to :user
-  has_many :tasks, dependent: :destroy
+  has_many :tasks, -> { order(:position) }, dependent: :destroy
 
-  # 💡 reject_if: :all_blank を追加して、中身が空のタスクは保存を無視するようにします
   accepts_nested_attributes_for :tasks, reject_if: :all_blank, allow_destroy: true
 
   def completed_tasks_count
-    tasks.completed.count
+    tasks.where(completed: true).count
   end
 
+  # 時間ベースで割合を計算する
   def progress_rate
-    return 0 if tasks.count == 0
-    (completed_tasks_count.to_f / tasks.count * 100).round
+    total_duration = tasks.sum(:duration).to_f
+    return 0 if total_duration.zero?
+
+    # 完了したタスクの時間の合計
+    completed_duration = tasks.where(completed: true).sum(:duration).to_f
+    
+    # パーセンテージを計算
+    ((completed_duration / total_duration) * 100).round
   end
 end

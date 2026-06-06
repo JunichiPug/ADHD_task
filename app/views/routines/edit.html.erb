@@ -10,7 +10,7 @@
                 <path d="M42.4379 44C42.4379 44 36.0744 33.9038 41.1692 24C46.8624 12.9336 42.2078 4 42.2078 4L7.01134 4C7.01134 4 11.6577 12.932 5.96912 23.9969C0.876273 33.9029 7.27094 44 7.27094 44L42.4379 44Z" fill="currentColor"></path>
               </svg>
             </div>
-            <h2 class="text-on-surface text-headline-md font-bold leading-tight tracking-[-0.015em]">ルーチンの作成</h2>
+            <h2 class="text-on-surface text-headline-md font-bold leading-tight tracking-[-0.015em]">ルーチンの編集</h2>
           </div>
           <%= link_to routines_path, class: "flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-6 bg-surface-container-high text-on-surface text-label-lg font-bold hover:bg-surface-container-highest transition-colors" do %>
             <span class="truncate">キャンセル</span>
@@ -35,12 +35,12 @@
             <div id="task-fields-container" class="flex flex-col gap-4">
               <%= f.fields_for :tasks do |task_form| %>
                 <div class="nested-fields flex items-center gap-4 bg-surface-container-lowest p-4 rounded-xl border border-surface-container-highest w-full">
-                  <div class="cursor-grab text-outline-variant hover:text-outline p-2">
+                  <div class="cursor-grab text-outline-variant hover:text-outline p-2 flex-shrink-0">
                     <span class="material-symbols-outlined">drag_indicator</span>
                   </div>
                   
                   <div class="flex-1">
-                    <%= task_form.text_field :title, class: "w-full bg-transparent border-none focus:ring-0 text-body-lg p-0", placeholder: "新しいタスクを入力..." %>
+                    <%= task_form.text_field :title, class: "w-full bg-transparent border-none focus:ring-0 text-body-lg p-0 font-semibold text-on-surface", placeholder: "新しいタスクを入力..." %>
                     
                     <div class="flex items-center gap-2 mt-2">
                       <div class="flex items-center bg-surface-container-high rounded-lg px-3 py-1.5 border border-outline-variant/30">
@@ -50,6 +50,14 @@
                       <span class="text-on-surface-variant text-label-sm">所要時間</span>
                     </div>
                   </div>
+
+                  <div class="flex items-center flex-shrink-0">
+                    <%= task_form.hidden_field :position, class: "position-field" %>
+                    <%= task_form.hidden_field :_destroy, value: 0, class: "destroy-marker" %>
+                    <button type="button" class="delete-task-button text-on-surface-variant hover:text-error p-2 transition-colors">
+                      <span class="material-symbols-outlined">delete</span>
+                    </button>
+                  </div>
                 </div>
               <% end %>
             </div>
@@ -57,19 +65,26 @@
 
           <template id="task-template">
             <%= f.fields_for :tasks, Task.new, child_index: "NEW_RECORD" do |task_form| %>
-              <div class="nested-fields flex items-center gap-4 bg-surface-container-lowest p-4 rounded-xl border border-surface-container-highest w-full mt-4">
-                <div class="cursor-grab text-outline-variant hover:text-outline p-2">
+              <div class="nested-fields flex items-center gap-4 bg-surface-container-lowest p-4 rounded-xl border border-surface-container-highest w-full">
+                <div class="cursor-grab text-outline-variant hover:text-outline p-2 flex-shrink-0">
                   <span class="material-symbols-outlined">drag_indicator</span>
                 </div>
                 <div class="flex-1">
-                  <%= task_form.text_field :title, class: "w-full bg-transparent border-none focus:ring-0 text-body-lg p-0", placeholder: "新しいタスクを入力..." %>
+                  <%= task_form.text_field :title, class: "w-full bg-transparent border-none focus:ring-0 text-body-lg p-0 font-semibold text-on-surface", placeholder: "新しいタスクを入力..." %>
                   <div class="flex items-center gap-2 mt-2">
-                    <div class="flex items-center bg-surface-container-high/50 rounded-lg px-3 py-1.5 border border-outline-variant/30">
+                    <div class="flex items-center bg-surface-container-high rounded-lg px-3 py-1.5 border border-outline-variant/30">
                       <%= task_form.number_field :duration, min: 0, class: "w-12 bg-transparent border-none p-0 text-body-md font-medium text-on-surface focus:ring-0 text-center", placeholder: "0" %>
                       <span class="text-on-surface-variant text-label-sm font-medium">分</span>
                     </div>
                     <span class="text-on-surface-variant text-label-sm">所要時間</span>
                   </div>
+                </div>
+
+                <div class="flex items-center flex-shrink-0">
+                  <%= task_form.hidden_field :_destroy, value: 0, class: "destroy-marker" %>
+                  <button type="button" class="delete-task-button text-on-surface-variant hover:text-error p-2 transition-colors">
+                    <span class="material-symbols-outlined">delete</span>
+                  </button>
                 </div>
               </div>
             <% end %>
@@ -92,32 +107,74 @@
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
-
 <script>
-  // テンプレートからHTMLを取得して動的にタスクを追加する処理
-  document.getElementById('add-task-button')?.addEventListener('click', function() {
+  // 💡 Turbo環境下で安全かつ二重登録を防ぐ初期化ロジック
+  //    SortableJS本体はlayoutのheadで読み込み済み（Turbo遷移でも利用可能）
+  function initRoutineForm() {
     const container = document.getElementById('task-fields-container');
+    const addButton = document.getElementById('add-task-button');
     const template = document.getElementById('task-template');
-    
-    if (container && template) {
-      const timeStamp = new Date().getTime();
-      let htmlString = template.innerHTML;
-      // ダミーのIDである 'NEW_RECORD' を現在のタイムスタンプ（一意の数値）に置き換える
-      const html = htmlString.replace(/NEW_RECORD/g, timeStamp);
-      container.insertAdjacentHTML('beforeend', html);
-    }
-  });
 
-  // SortableJS によるドラッグ＆ドロップの有効化
-  document.addEventListener("turbo:load", function() {
-    const container = document.getElementById('task-fields-container');
-    if (container) {
-      Sortable.create(container, {
+    if (!container) return;
+
+    // 既存のイベントリスナーによる重複発火をクリーンに防ぐため、
+    // ボタンのリスナーを一度リセット、またはプロパティ方式で安全にバインドします。
+    if (addButton && template) {
+      addButton.onclick = function(e) {
+        e.preventDefault();
+        const timeStamp = new Date().getTime();
+        const html = template.innerHTML.replace(/NEW_RECORD/g, timeStamp);
+        
+        // 連続追加時に余計な余白(mt-4)が累積するのを防ぐため、綺麗なHTML構造で末尾に挿入
+        container.insertAdjacentHTML('beforeend', html);
+      };
+    }
+
+    // 削除ボタンの処理（containerに対して1回だけバインドされるので安全）
+    container.onclick = function(e) {
+      const deleteButton = e.target.closest('.delete-task-button');
+      if (deleteButton) {
+        e.preventDefault();
+        const card = deleteButton.closest('.nested-fields');
+        if (card) {
+          const destroyMarker = card.querySelector('.destroy-marker');
+          // Railsの仕様：既存データは1を立てて非表示、新規追加データはDOMごと消去
+          if (destroyMarker && destroyMarker.value === '0' && destroyMarker.getAttribute('name').includes('[id]')) {
+            destroyMarker.value = '1';
+            card.style.display = 'none';
+          } else {
+            card.remove();
+          }
+        }
+      }
+    };
+
+    // Sortable の二重初期化を防ぐ
+    if (!container._sortable) {
+      container._sortable = Sortable.create(container, {
         handle: '.cursor-grab',
         animation: 150,
         ghostClass: 'opacity-50'
       });
     }
-  });
+
+    // 送信直前にDOM並び順でpositionを採番（ドラッグ・追加・削除すべてに対応）
+    const form = container.closest('form');
+    if (form) {
+      form.onsubmit = function() {
+        container.querySelectorAll('.nested-fields').forEach(function(card, i) {
+          const pos = card.querySelector('.position-field');
+          if (pos) pos.value = i;
+        });
+      };
+    }
+  }
+
+  // Turboと通常ロードの両方に対応
+  document.addEventListener('turbo:load', initRoutineForm);
+  if (document.readyState !== 'loading') {
+    initRoutineForm();
+  } else {
+    document.addEventListener('DOMContentLoaded', initRoutineForm);
+  }
 </script>

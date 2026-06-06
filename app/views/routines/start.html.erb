@@ -1,0 +1,308 @@
+<div class="relative flex h-auto min-h-screen w-full flex-col bg-background group/design-root overflow-x-hidden">
+  <div class="layout-container flex h-full grow flex-col">
+
+    <header class="w-full top-0 bg-surface dark:bg-on-background flex justify-between items-center px-container-padding py-4 z-40">
+      <div class="flex items-center gap-4"></div>
+    </header>
+
+    <main class="flex-grow flex flex-col items-center justify-start px-container-padding pt-2 pb-stack-gap-lg max-w-2xl mx-auto w-full">
+
+      <div class="text-center mb-6">
+        <h1 class="text-xl font-bold text-on-surface tracking-wide"><%= @routine.title %></h1>
+      </div>
+
+      <div class="donut-container flex items-center justify-center mb-6 relative" style="width: 320px; height: 320px;">
+        <canvas id="routineChart"></canvas>
+
+        <div class="absolute inset-0 flex flex-col items-center justify-center text-center p-stack-gap-md pointer-events-none">
+          <span class="material-symbols-outlined text-primary mb-1 text-3xl">timer</span>
+          <h2 id="current-task-title" class="font-headline-md text-headline-md text-on-surface leading-tight px-4 font-bold">
+            <%= @tasks.any? ? @tasks.first.title : "タスクがありません" %>
+          </h2>
+          <div class="mt-1 flex items-center gap-1">
+            <span id="total-timer" class="text-headline-md text-primary font-bold">
+              <%= @tasks.any? ? sprintf("%02d:00", @tasks.sum(:duration)) : "00:00" %>
+            </span>
+            <span class="text-label-sm text-outline mt-1"></span>
+          </div>
+        </div>
+      </div>
+
+      <%# タスク色：ピンク系は使わない（経過表示の桜色とぶつかるため）。ピルとドーナツで同じ色＝セット %>
+      <% task_colors = ["#becba8", "#b7c9d4", "#dae8c3", "#cfe1ec"] %>
+
+      <%# 5個を超えたら自動で折り返す（flex-wrap）。各タスクは「必要時間＋ピル」の縦積み %>
+      <div id="task-pills" class="w-full flex flex-wrap items-end justify-center gap-x-stack-gap-sm gap-y-4 mb-12 py-2">
+        <% @tasks.each_with_index do |task, index| %>
+          <% color = task_colors[index % task_colors.length] %>
+          <% current = (index == 0) %>
+
+          <div class="task-pill flex flex-col items-center gap-1.5 shrink-0"
+               data-index="<%= index %>"
+               style="opacity: <%= current ? '1' : '0.6' %>;">
+            <span class="text-label-sm text-on-surface-variant font-medium"><%= task.duration.to_i %>分</span>
+
+            <div class="pill-body flex items-center gap-2 px-5 py-2.5 text-on-surface rounded-full whitespace-nowrap transition-all duration-300"
+                 style="background-color: <%= color %>;<%= current ? ' box-shadow: 0 0 0 4px rgba(27,28,26,0.12), 0 4px 6px rgba(0,0,0,0.1); font-weight: 700;' : '' %>">
+              <span class="pill-icon material-symbols-outlined text-sm"><%= current ? 'radio_button_checked' : 'circle' %></span>
+              <span class="text-label-lg"><%= task.title %></span>
+            </div>
+          </div>
+        <% end %>
+      </div>
+
+      <div class="w-full grid grid-cols-2 gap-stack-gap-md">
+        <button id="start-btn" class="flex flex-col items-center justify-center gap-1 py-stack-gap-md bg-surface-container-lowest text-on-surface rounded-xl shadow-sm hover:bg-surface transition-all active:scale-95 border-2 border-surface-container">
+          <span id="start-icon" class="material-symbols-outlined text-3xl">play_circle</span>
+          <span class="text-label-lg font-bold">はじめる</span>
+        </button>
+
+        <button id="pause-btn" class="flex flex-col items-center justify-center gap-1 py-stack-gap-md bg-primary text-on-primary rounded-xl shadow-md hover:opacity-90 transition-all active:scale-95">
+          <span class="material-symbols-outlined text-3xl">pause_circle</span>
+          <span class="text-label-lg">一時停止</span>
+        </button>
+      </div>
+
+      <div class="w-full grid grid-cols-1 mt-stack-gap-md">
+        <%= link_to routines_path, class: "flex flex-col items-center justify-center gap-1 py-stack-gap-md bg-secondary-fixed-dim text-on-secondary-fixed-variant rounded-xl shadow-sm" do %>
+          <span class="material-symbols-outlined text-3xl">arrow_back</span>
+          <span class="text-label-lg">戻る</span>
+        <% end %>
+      </div>
+    </main>
+
+  <nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center py-stack-gap-sm bg-surface-container border-t border-surface-variant shadow-sm">
+    <a class="flex flex-col items-center justify-center text-outline px-6 py-2 transition-all duration-150 hover:text-primary" href="#">
+      <span class="material-symbols-outlined">note_alt</span>
+      <span class="text-sm font-semibold mt-1">メモ帳</span>
+    </a>
+  </nav>
+
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+(() => {
+  let timerId = null;
+  let chartInstance = null;
+
+  // ズレ対策用の変数
+  let lastTick = null;
+  let exactTotalSeconds = 0;
+
+  function init() {
+    const ctx = document.getElementById('routineChart');
+    if (!ctx) return;
+
+    const routineId = "<%= @routine.id %>";
+    const KEY_TIME = `routine_${routineId}_remaining_seconds`;
+
+    const originalDurations = <%= raw @tasks.map { |t| t.duration.to_i }.to_json %>; // 分
+    const taskLabels = <%= raw @tasks.map(&:title).to_json %>;
+    const taskColors = <%= raw task_colors.to_json %>;     // ピンク以外（ピルと共通＝セット）
+    const SAKURA = '#f4aecb';     // 桜色（経過分の塗りつぶし）
+    const STEP_SECONDS = 15;      // 15秒ごとに桜色を進める
+
+    const taskDurations = originalDurations.map(d => d * 60); // 秒
+    const defaultTotalSeconds = taskDurations.reduce((a, b) => a + b, 0);
+
+    let totalSeconds = parseInt(localStorage.getItem(KEY_TIME), 10);
+    if (isNaN(totalSeconds) || totalSeconds > defaultTotalSeconds) {
+      totalSeconds = defaultTotalSeconds;
+    }
+
+    const timerElement = document.getElementById('total-timer');
+    const currentTaskElement = document.getElementById('current-task-title');
+    const startBtn = document.getElementById('start-btn');
+    const pauseBtn = document.getElementById('pause-btn');
+    const pills = Array.from(document.querySelectorAll('#task-pills .task-pill'));
+
+    // 経過秒（実数）と、15秒刻みに丸めた桜色の長さ
+    function elapsedSeconds() {
+      return defaultTotalSeconds - totalSeconds;
+    }
+    function sakuraSeconds() {
+      return Math.min(
+        Math.floor(elapsedSeconds() / STEP_SECONDS) * STEP_SECONDS,
+        defaultTotalSeconds
+      );
+    }
+
+    // ドーナツのセグメント： [桜(経過)] → [現タスクの残り] → [未来タスク...]
+    function buildSegments() {
+      const pink = sakuraSeconds();
+      const data = [];
+      const colors = [];
+
+      if (pink > 0) { data.push(pink); colors.push(SAKURA); }
+
+      let cursor = 0;
+      for (let i = 0; i < taskDurations.length; i++) {
+        const taskEnd = cursor + taskDurations[i];
+        if (pink >= taskEnd) {
+          // 完全に経過済み（桜ブロックに含まれる）
+        } else if (pink <= cursor) {
+          data.push(taskDurations[i]);
+          colors.push(taskColors[i % taskColors.length]);
+        } else {
+          data.push(taskEnd - pink);
+          colors.push(taskColors[i % taskColors.length]);
+        }
+        cursor = taskEnd;
+      }
+
+      if (data.length === 0) { data.push(1); colors.push(SAKURA); }
+      return { data, colors };
+    }
+
+    // 実経過に基づく現在タスク（中央表示用）
+    function currentTaskIndex() {
+      if (totalSeconds <= 0) return -1;
+      const elapsed = elapsedSeconds();
+      let cursor = 0;
+      for (let i = 0; i < taskDurations.length; i++) {
+        cursor += taskDurations[i];
+        if (elapsed < cursor) return i;
+      }
+      return taskDurations.length - 1;
+    }
+
+    const initial = buildSegments();
+    chartInstance = new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: taskLabels,
+        datasets: [{
+          data: initial.data,
+          backgroundColor: initial.colors,
+          borderWidth: 2,
+          borderColor: '#fbf9f5'
+        }]
+      },
+      options: {
+        animation: false,
+        cutout: '83%',
+        plugins: { legend: { display: false }, tooltip: { enabled: false } }
+      }
+    });
+
+    function updateTimerDisplay() {
+      const m = Math.floor(totalSeconds / 60);
+      const s = totalSeconds % 60;
+      timerElement.textContent = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+    }
+
+    function updateCurrentTask() {
+      const idx = currentTaskIndex();
+      currentTaskElement.textContent = idx >= 0 ? taskLabels[idx] : "完了しました 🎉";
+      updatePills(idx);
+    }
+
+    // 実行中タスクに合わせてピルの強調を切り替える（完了 / 実行中 / これから）
+    function updatePills(currentIdx) {
+      pills.forEach((pill, i) => {
+        const body = pill.querySelector('.pill-body');
+        const icon = pill.querySelector('.pill-icon');
+        if (!body || !icon) return;
+
+        if (currentIdx === -1 || i < currentIdx) {        // 完了
+          pill.style.opacity = '0.45';
+          body.style.boxShadow = 'none';
+          body.style.fontWeight = '400';
+          icon.textContent = 'check_circle';
+        } else if (i === currentIdx) {                    // 実行中
+          pill.style.opacity = '1';
+          body.style.boxShadow = '0 0 0 4px rgba(27,28,26,0.12), 0 4px 6px rgba(0,0,0,0.1)';
+          body.style.fontWeight = '700';
+          icon.textContent = 'radio_button_checked';
+        } else {                                          // これから
+          pill.style.opacity = '0.6';
+          body.style.boxShadow = 'none';
+          body.style.fontWeight = '400';
+          icon.textContent = 'circle';
+        }
+      });
+    }
+
+    function updateChart() {
+      const seg = buildSegments();
+      chartInstance.data.datasets[0].data = seg.data;
+      chartInstance.data.datasets[0].backgroundColor = seg.colors;
+      chartInstance.update();
+    }
+
+    function saveState() {
+      localStorage.setItem(KEY_TIME, totalSeconds);
+    }
+
+    function clearStorage() {
+      localStorage.removeItem(KEY_TIME);
+    }
+
+    function finishRoutine() {
+      if (timerId) { clearInterval(timerId); timerId = null; }
+      clearStorage();
+      totalSeconds = 0;
+      updateTimerDisplay();
+      updateCurrentTask();
+      updateChart();
+      startBtn.disabled = true;
+      pauseBtn.disabled = true;
+    }
+
+    // ★ ズレないカウントダウン処理
+    function countDown() {
+      if (totalSeconds <= 0) { finishRoutine(); return; }
+
+      const now = Date.now();
+      const deltaSeconds = (now - lastTick) / 1000;
+      lastTick = now;
+
+      exactTotalSeconds -= deltaSeconds;
+      if (exactTotalSeconds <= 0) exactTotalSeconds = 0;
+
+      const newTotalSeconds = Math.ceil(exactTotalSeconds);
+      if (newTotalSeconds !== totalSeconds) {
+        totalSeconds = newTotalSeconds;
+        saveState();
+        updateTimerDisplay();
+        updateCurrentTask();
+        updateChart();
+        if (totalSeconds <= 0) finishRoutine();
+      }
+    }
+
+    startBtn.addEventListener('click', () => {
+      if (timerId || totalSeconds <= 0) return;
+      lastTick = Date.now();
+      exactTotalSeconds = totalSeconds;
+      timerId = setInterval(countDown, 200);
+      startBtn.disabled = true;
+      pauseBtn.disabled = false;
+    });
+
+    pauseBtn.addEventListener('click', () => {
+      if (!timerId) return;
+      clearInterval(timerId);
+      timerId = null;
+      startBtn.disabled = false;
+      pauseBtn.disabled = true;
+    });
+
+    // 初期描画
+    updateTimerDisplay();
+    updateCurrentTask();
+    updateChart();
+  }
+
+  function cleanup() {
+    if (timerId) { clearInterval(timerId); timerId = null; }
+    if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
+  }
+
+  document.addEventListener("turbo:load", init);
+  document.addEventListener("turbo:before-cache", cleanup);
+})();
+</script>

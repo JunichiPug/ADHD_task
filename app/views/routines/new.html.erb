@@ -35,7 +35,7 @@
             <div id="task-fields-container" class="flex flex-col gap-4">
               <%= f.fields_for :tasks do |task_form| %>
                 <div class="nested-fields flex items-center gap-4 bg-surface-container-lowest p-4 rounded-xl border border-surface-container-highest w-full">
-                  <div class="cursor-grab text-outline-variant hover:text-outline p-2">
+                  <div class="cursor-grab text-outline-variant hover:text-outline p-2 flex-shrink-0">
                     <span class="material-symbols-outlined">drag_indicator</span>
                   </div>
                   
@@ -50,6 +50,14 @@
                       <span class="text-on-surface-variant text-label-sm">所要時間</span>
                     </div>
                   </div>
+
+                  <div class="flex items-center flex-shrink-0">
+                    <%= task_form.hidden_field :position, class: "position-field" %>
+                    <%= task_form.hidden_field :_destroy, value: 0, class: "destroy-marker" %>
+                    <button type="button" class="delete-task-button text-on-surface-variant hover:text-error p-2 transition-colors">
+                      <span class="material-symbols-outlined">delete</span>
+                    </button>
+                  </div>
                 </div>
               <% end %>
             </div>
@@ -58,7 +66,7 @@
           <template id="task-template">
             <%= f.fields_for :tasks, Task.new, child_index: "NEW_RECORD" do |task_form| %>
               <div class="nested-fields flex items-center gap-4 bg-surface-container-lowest p-4 rounded-xl border border-surface-container-highest w-full mt-4">
-                <div class="cursor-grab text-outline-variant hover:text-outline p-2">
+                <div class="cursor-grab text-outline-variant hover:text-outline p-2 flex-shrink-0">
                   <span class="material-symbols-outlined">drag_indicator</span>
                 </div>
                 <div class="flex-1">
@@ -70,6 +78,13 @@
                     </div>
                     <span class="text-on-surface-variant text-label-sm">所要時間</span>
                   </div>
+                </div>
+
+                <div class="flex items-center flex-shrink-0">
+                  <%= task_form.hidden_field :_destroy, value: 0, class: "destroy-marker" %>
+                  <button type="button" class="delete-task-button text-on-surface-variant hover:text-error p-2 transition-colors">
+                    <span class="material-symbols-outlined">delete</span>
+                  </button>
                 </div>
               </div>
             <% end %>
@@ -92,32 +107,59 @@
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
-
 <script>
-  // テンプレートからHTMLを取得して動的にタスクを追加する処理
-  document.getElementById('add-task-button')?.addEventListener('click', function() {
+  // SortableJS本体はlayoutのheadで読み込み済み（Turbo遷移でも利用可能）
+  document.addEventListener('turbo:load', function() {
+    const addButton = document.getElementById('add-task-button');
     const container = document.getElementById('task-fields-container');
-    const template = document.getElementById('task-template');
-    
-    if (container && template) {
-      const timeStamp = new Date().getTime();
-      let htmlString = template.innerHTML;
-      // ダミーのIDである 'NEW_RECORD' を現在のタイムスタンプ（一意の数値）に置き換える
-      const html = htmlString.replace(/NEW_RECORD/g, timeStamp);
-      container.insertAdjacentHTML('beforeend', html);
-    }
-  });
+    const template  = document.getElementById('task-template');
 
-  // SortableJS によるドラッグ＆ドロップの有効化
-  document.addEventListener("turbo:load", function() {
-    const container = document.getElementById('task-fields-container');
-    if (container) {
-      Sortable.create(container, {
+    if (!container) return;
+
+    // onclickへの代入で複数回呼ばれても1つのハンドラだけが有効になる
+    if (addButton && template) {
+      addButton.onclick = function(e) {
+        e.preventDefault();
+        const timeStamp = new Date().getTime();
+        const html = template.innerHTML.replace(/NEW_RECORD/g, timeStamp);
+        container.insertAdjacentHTML('beforeend', html);
+      };
+    }
+
+    container.onclick = function(e) {
+      const deleteButton = e.target.closest('.delete-task-button');
+      if (deleteButton) {
+        e.preventDefault();
+        const card = deleteButton.closest('.nested-fields');
+        if (card) {
+          const destroyMarker = card.querySelector('.destroy-marker');
+          if (destroyMarker) {
+            destroyMarker.value = '1';
+            card.style.display = 'none';
+          } else {
+            card.remove();
+          }
+        }
+      }
+    };
+
+    // Sortable の二重初期化を防ぐ
+    if (!container._sortable) {
+      container._sortable = Sortable.create(container, {
         handle: '.cursor-grab',
         animation: 150,
         ghostClass: 'opacity-50'
       });
+    }
+
+    const form = container.closest('form');
+    if (form) {
+      form.onsubmit = function() {
+        container.querySelectorAll('.nested-fields').forEach(function(card, i) {
+          const pos = card.querySelector('.position-field');
+          if (pos) pos.value = i;
+        });
+      };
     }
   });
 </script>
