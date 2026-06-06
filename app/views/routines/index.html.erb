@@ -1,124 +1,16 @@
-<%# 💡 フォントやTailwindカスタムカラーの設定 %>
-<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@400;600;700&display=swap" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
-<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<%# 💡 pb-32からpb-24（ナビゲーションバーの高さ分）に適正化 %>
+<div class="bg-background text-on-background min-h-screen pb-24">
 
-<style>
-  body {
-    font-family: 'Atkinson Hyperlegible Next', sans-serif;
-    -webkit-font-smoothing: antialiased;
-  }
-  .material-symbols-outlined {
-    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
-  }
-  .donut-chart {
-    transform: rotate(-90deg);
-  }
-</style>
-
-<script id="tailwind-config">
-  tailwind.config = {
-    darkMode: "class",
-    theme: {
-      extend: {
-        "colors": {
-          "secondary": "#566246",
-          "surface-variant": "#e4e2de",
-          "on-surface": "#1b1c1a",
-          "on-tertiary": "#ffffff",
-          "secondary-container": "#dae8c3",
-          "tertiary-fixed": "#d3e5f0",
-          "primary-container": "#f9d5e5",
-          "secondary-fixed": "#dae8c3",
-          "surface": "#fbf9f5",
-          "error-container": "#ffdad6",
-          "on-secondary-fixed-variant": "#3f4b30",
-          "surface-container": "#efeeea",
-          "error": "#ba1a1a",
-          "on-secondary": "#ffffff",
-          "on-tertiary-container": "#53646e",
-          "surface-dim": "#dbdad6",
-          "surface-tint": "#725764",
-          "surface-container-highest": "#e4e2de",
-          "on-tertiary-fixed-variant": "#384952",
-          "inverse-surface": "#30312e",
-          "primary-fixed": "#fdd9e9",
-          "on-secondary-container": "#5c694b",
-          "on-primary-fixed": "#2a1520",
-          "outline-variant": "#d1c3c8",
-          "outline": "#7f7478",
-          "on-primary-fixed-variant": "#593f4c",
-          "background": "#fbf9f5",
-          "on-primary": "#ffffff",
-          "on-secondary-fixed": "#141f08",
-          "surface-container-high": "#eae8e4",
-          "inverse-on-surface": "#f2f0ed",
-          "primary-fixed-dim": "#e0bdcd",
-          "on-error": "#ffffff",
-          "tertiary": "#50616a",
-          "surface-container-lowest": "#ffffff",
-          "on-primary-container": "#765a68",
-          "primary": "#725764",
-          "surface-container-low": "#f5f3ef",
-          "surface-bright": "#fbf9f5",
-          "on-error-container": "#93000a",
-          "tertiary-fixed-dim": "#b7c9d4",
-          "on-background": "#1b1c1a",
-          "tertiary-container": "#cfe1ec",
-          "inverse-primary": "#e0bdcd",
-          "on-surface-variant": "#4e4448",
-          "secondary-fixed-dim": "#becba8",
-          "on-tertiary-fixed": "#0c1e25"
-        },
-        "borderRadius": {
-          "DEFAULT": "0.25rem",
-          "lg": "0.5rem",
-          "xl": "0.75rem",
-          "full": "999px"
-        },
-        "spacing": {
-          "gutter": "16px",
-          "stack-gap-md": "24px",
-          "container-padding": "24px",
-          "unit": "8px",
-          "stack-gap-sm": "12px",
-          "stack-gap-lg": "40px"
-        }
-      }
-    }
-  }
-</script>
-
-<div class="bg-background text-on-background min-h-screen pb-32">
-  <header class="w-full top-0 flex justify-between items-center px-container-padding py-stack-gap-sm bg-surface sticky z-50 border-b border-surface-variant">
-    <div class="flex items-center gap-unit text-on-secondary-fixed-variant opacity-0" aria-hidden="true">
-      <span class="material-symbols-outlined text-[20px]">chevron_left</span>
-      <span class="text-sm font-semibold">戻る</span>
-    </div>
-    
-    <div class="text-2xl font-bold text-primary">ひびまる</div>
-    
-    <div class="flex items-center gap-stack-gap-md opacity-0" aria-hidden="true">
-      <span class="material-symbols-outlined">account_circle</span>
-    </div>
-  </header>
+  <%# 💡 重複とレイアウト崩れを防ぐため、このファイル内の独自headerは削除しました %>
 
   <main class="max-w-5xl mx-auto px-container-padding py-stack-gap-lg">
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-stack-gap-md">
-      
       <% @routines.each do |routine| %>
-        <% rate = routine.progress_rate %>
-        <% total_duration = routine.tasks.sum(:duration) || 0 %>
-        
-        <% border_color = if rate == 100
-                            "border-secondary"
-                          elsif rate > 0
-                            "border-primary"
-                          else
-                            "border-tertiary-container"
-                          end %>
+        <% total_duration = routine.tasks.sum(:duration).to_i %>
+        <% task_count = routine.tasks.count %>
 
-        <div class="bg-surface-container-lowest rounded-xl p-stack-gap-md shadow-[0_4px_20px_rgba(0,0,0,0.05)] border-l-8 <%= border_color %> flex flex-col justify-between hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] transition-shadow duration-300 min-h-[220px] relative">
+        <div class="routine-card bg-surface-container-lowest rounded-xl p-stack-gap-md shadow-[0_4px_20px_rgba(0,0,0,0.05)] border-l-8 border-tertiary-container flex flex-col justify-between hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] transition-shadow duration-300 min-h-[220px] relative"
+             data-routine-id="<%= routine.id %>">
           <div class="flex justify-between items-start mb-stack-gap-md">
             <div>
               <h3 class="text-xl font-bold text-on-surface mb-unit"><%= routine.title %></h3>
@@ -127,20 +19,15 @@
                 <span><%= total_duration %> 分</span>
               </div>
             </div>
-
             <div class="relative w-16 h-16">
               <svg class="donut-chart w-16 h-16" viewBox="0 0 36 36">
                 <circle class="stroke-surface-container-highest" cx="18" cy="18" fill="transparent" r="16" stroke-width="4"></circle>
-                <% stroke_color = rate == 100 ? "stroke-secondary" : (rate > 0 ? "stroke-primary" : "stroke-tertiary") %>
-                <circle class="<%= stroke_color %>" cx="18" cy="18" fill="transparent" r="16" stroke-dasharray="<%= rate %>, 100" stroke-linecap="round" stroke-width="4"></circle>
+                <%# 💡 進捗(経過時間の割合)はlocalStorageからJSで反映 %>
+                <circle class="progress-arc" data-routine-id="<%= routine.id %>" cx="18" cy="18" fill="transparent" r="16"
+                        stroke="#50616a" stroke-dasharray="0, 100" stroke-linecap="round" stroke-width="4"></circle>
               </svg>
-              <div class="absolute inset-0 flex items-center justify-center text-sm font-semibold <%= rate == 100 ? 'text-secondary' : (rate > 0 ? 'text-primary' : 'text-tertiary') %>">
-                <% if rate == 100 %>
-                  <span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'wght' 700;">check</span>
-                <% else %>
-                  <%= rate %>%
-                <% end %>
-              </div>
+              <div class="progress-label absolute inset-0 flex items-center justify-center text-sm font-semibold"
+                   data-routine-id="<%= routine.id %>" style="color:#50616a;">0%</div>
             </div>
           </div>
 
@@ -148,28 +35,34 @@
             <%= link_to edit_routine_path(routine), class: "w-10 h-10 rounded-full flex items-center justify-center text-outline hover:bg-surface-container hover:text-primary transition-all duration-200 border border-transparent hover:border-outline-variant" do %>
               <span class="material-symbols-outlined text-[20px]">edit</span>
             <% end %>
-            <%= link_to routine_path(routine), data: { turbo_method: :delete, turbo_confirm: "本当に削除しますか？" }, class: "w-10 h-10 rounded-full flex items-center justify-center text-outline hover:bg-error-container hover:text-error transition-all duration-200 border border-transparent hover:border-error" do %>
+            <%= link_to routine_path(routine), data: { turbo_method: :delete, turbo_confirm: "ルーティンを本当に削除しますか？" }, class: "w-10 h-10 rounded-full flex items-center justify-center text-outline hover:bg-error-container hover:text-error transition-all duration-200 border border-transparent hover:border-error" do %>
               <span class="material-symbols-outlined text-[20px]">delete</span>
             <% end %>
           </div>
 
-          <div class="flex items-center justify-between mt-auto pt-stack-gap-md">
-            <% if rate == 100 %>
-              <span class="text-body-md text-secondary font-bold">完了</span>
-              <button class="border-2 border-outline text-outline px-stack-gap-lg py-stack-gap-sm rounded-full text-sm font-semibold hover:bg-surface-container transition-colors flex items-center gap-unit h-[56px]">
-                <span class="material-symbols-outlined">refresh</span>リセット
+          <div class="flex items-center justify-between mt-auto pt-stack-gap-md gap-unit">
+            <span class="text-body-md text-outline">
+              <span class="completed-count" data-routine-id="<%= routine.id %>">0</span>/<%= task_count %> 完了したタスク
+            </span>
+
+            <%# 💡 進行中(一時停止して戻った)場合は「つづける」＋上に半分サイズの「リセット」 %>
+            <div class="routine-actions relative flex flex-col items-stretch gap-unit shrink-0">
+              <%# リセットは絶対配置でフロー外（つづけるの真上）に重ね、表示してもカード高さを変えない %>
+              <button type="button"
+                      class="reset-btn absolute bottom-full right-0 mb-unit border-2 border-outline text-outline rounded-full text-xs font-semibold hover:bg-surface-container transition-colors items-center justify-center gap-1 h-[34px] w-1/2 min-w-fit px-2 flex whitespace-nowrap"
+                      style="display:none;"
+                      data-routine-id="<%= routine.id %>">
+                <span class="material-symbols-outlined text-[16px]">refresh</span>リセット
               </button>
-            <% elsif rate > 0 %>
-              <span class="text-body-md text-outline"><%= routine.completed_tasks_count %>/<%= routine.tasks.count %> 完了したタスク</span>
-              <button class="bg-primary text-on-primary px-stack-gap-lg py-stack-gap-sm rounded-full text-sm font-semibold hover:opacity-90 transition-opacity flex items-center gap-unit h-[56px]">
-                <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">play_arrow</span>つづける
-              </button>
-            <% else %>
-              <span class="text-body-md text-outline"><%= routine.completed_tasks_count %>/<%= routine.tasks.count %> 完了したタスク</span>
-              <button class="border-2 border-primary text-primary px-stack-gap-lg py-stack-gap-sm rounded-full text-sm font-semibold hover:bg-primary-container/20 transition-colors flex items-center gap-unit h-[56px]">
-                <span class="material-symbols-outlined">play_arrow</span>はじめる
-              </button>
-            <% end %>
+
+              <%= link_to start_routine_path(routine),
+                    id: "routine-btn-#{routine.id}",
+                    data: { turbo: false },
+                    class: "start-btn border-2 border-primary text-primary px-6 py-2 rounded-full text-sm font-semibold hover:opacity-90 transition-opacity flex items-center justify-center gap-unit h-[48px]" do %>
+                <span class="material-symbols-outlined btn-icon" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+                <span class="btn-label">はじめる</span>
+              <% end %>
+            </div>
           </div>
         </div>
       <% end %>
@@ -179,21 +72,125 @@
           <div class="w-12 h-12 rounded-full bg-surface-container flex items-center justify-center text-outline group-hover:bg-primary group-hover:text-on-primary transition-colors">
             <span class="material-symbols-outlined text-[32px]">add</span>
           </div>
-          <h3 class="text-xl font-bold text-on-surface-variant group-hover:text-primary transition-colors">ルーチンを追加</h3>
+          <h3 class="text-xl font-bold text-on-surface-variant group-hover:text-primary transition-colors">ルーティンを追加</h3>
         </div>
       <% end %>
-
     </div>
   </main>
 
   <nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center py-stack-gap-sm bg-surface-container border-t border-surface-variant shadow-sm">
-    <a class="flex flex-col items-center justify-center bg-primary-container text-on-primary-container rounded-full px-6 py-2 transition-all duration-150" href="#">
-      <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">dashboard</span>
-      <span class="text-sm font-semibold mt-1">ルーチン</span>
-    </a>
     <a class="flex flex-col items-center justify-center text-outline px-6 py-2 transition-all duration-150 hover:text-primary" href="#">
       <span class="material-symbols-outlined">note_alt</span>
-      <span class="text-sm font-semibold mt-1">覚書き</span>
+      <span class="text-sm font-semibold mt-1">メモ帳</span>
     </a>
   </nav>
 </div>
+
+<script>
+  // ルーチンごとのタスク所要時間（position順・分）と合計
+  const routineData = {
+    <% @routines.each do |routine| %>
+    "<%= routine.id %>": {
+      durations: <%= raw routine.tasks.map { |t| t.duration.to_i }.to_json %>,
+      total: <%= routine.tasks.sum(:duration).to_i %>
+    },
+    <% end %>
+  };
+
+  const COLORS = { primary: "#725764", tertiary: "#50616a" };
+
+  // localStorageの残り秒から、経過割合・完了タスク数・進行中かを算出
+  function computeProgress(id) {
+    const data = routineData[id];
+    const totalSec = (data.total || 0) * 60;
+    const raw = localStorage.getItem(`routine_${id}_remaining_seconds`);
+    let remaining = parseInt(raw, 10);
+    const started = raw !== null && !isNaN(remaining);
+    if (!started) remaining = totalSec;
+    remaining = Math.max(0, Math.min(remaining, totalSec));
+    const elapsed = totalSec - remaining;
+
+    // 経過秒に完全に収まったタスクを「完了」とカウント
+    let acc = 0, completed = 0;
+    data.durations.forEach(d => {
+      acc += d * 60;
+      if (acc > 0 && elapsed >= acc) completed++;
+    });
+
+    const rate = totalSec > 0 ? Math.round((elapsed / totalSec) * 100) : 0;
+    const inProgress = started && elapsed > 0 && remaining > 0;
+    return { rate, completed, count: data.durations.length, inProgress };
+  }
+
+  function updateCard(id) {
+    const p = computeProgress(id);
+    const color = p.rate > 0 ? COLORS.primary : COLORS.tertiary;
+
+    // 完了タスク数
+    const countEl = document.querySelector(`.completed-count[data-routine-id="${id}"]`);
+    if (countEl) countEl.textContent = p.completed;
+
+    // ドーナツ円弧（経過割合）
+    const arc = document.querySelector(`.progress-arc[data-routine-id="${id}"]`);
+    if (arc) {
+      arc.setAttribute('stroke-dasharray', `${p.rate}, 100`);
+      arc.setAttribute('stroke', color);
+    }
+
+    // ％表示
+    const label = document.querySelector(`.progress-label[data-routine-id="${id}"]`);
+    if (label) { label.textContent = `${p.rate}%`; label.style.color = color; }
+
+    // カードの左ボーダー
+    const card = document.querySelector(`.routine-card[data-routine-id="${id}"]`);
+    if (card) card.style.borderLeftColor = p.inProgress ? COLORS.primary : '';
+
+    // ボタン切替（つづける/はじめる、リセット表示）
+    const btn = document.getElementById(`routine-btn-${id}`);
+    const resetBtn = document.querySelector(`.reset-btn[data-routine-id="${id}"]`);
+    if (btn) {
+      const labelSpan = btn.querySelector('.btn-label');
+      if (p.inProgress) {
+        if (labelSpan) labelSpan.textContent = 'つづける';
+        btn.style.backgroundColor = COLORS.primary;
+        btn.style.color = '#ffffff';
+        if (resetBtn) resetBtn.style.display = 'flex';
+      } else {
+        if (labelSpan) labelSpan.textContent = 'はじめる';
+        btn.style.backgroundColor = '';
+        btn.style.color = '';
+        if (resetBtn) resetBtn.style.display = 'none';
+      }
+    }
+  }
+
+  function updateAllCards() {
+    Object.keys(routineData).forEach(updateCard);
+  }
+
+  function bindResetButtons() {
+    document.querySelectorAll('.reset-btn').forEach(btn => {
+      // onclick代入でTurbo再訪問時の二重登録を防ぐ
+      btn.onclick = () => {
+        if (!window.confirm("進行中のタスクを本当にリセットしますか？")) return;
+        const id = btn.dataset.routineId;
+        localStorage.removeItem(`routine_${id}_remaining_seconds`);
+        localStorage.removeItem(`routine_${id}_task_seconds`); // 旧キーの掃除
+        updateCard(id);
+      };
+    });
+  }
+
+  function initIndex() {
+    bindResetButtons();
+    updateAllCards();
+  }
+
+  document.addEventListener("turbo:load", initIndex);
+  window.addEventListener("pageshow", updateAllCards); // 戻る/進む復帰にも対応
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initIndex);
+  } else {
+    initIndex();
+  }
+</script>
