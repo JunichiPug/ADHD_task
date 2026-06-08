@@ -138,8 +138,19 @@
         const card = deleteButton.closest('.nested-fields');
         if (card) {
           const destroyMarker = card.querySelector('.destroy-marker');
-          // Railsの仕様：既存データは1を立てて非表示、新規追加データはDOMごと消去
-          if (destroyMarker && destroyMarker.value === '0' && destroyMarker.getAttribute('name').includes('[id]')) {
+
+          // fields_forが自動生成するid隠しフィールドはカードの「外」にあるため、
+          // カード内フィールド名の添字から対応するidフィールドをフォーム全体から探す。
+          let idField = null;
+          const named = card.querySelector('[name*="[tasks_attributes]"]');
+          const m = named && named.getAttribute('name').match(/\[tasks_attributes\]\[([^\]]+)\]/);
+          if (m) {
+            const form = card.closest('form');
+            idField = form.querySelector(`input[name="routine[tasks_attributes][${m[1]}][id]"]`);
+          }
+
+          // Railsの仕様：既存データは_destroyに1を立てて非表示、新規追加データはDOMごと消去
+          if (destroyMarker && idField) {
             destroyMarker.value = '1';
             card.style.display = 'none';
           } else {
@@ -162,9 +173,14 @@
     const form = container.closest('form');
     if (form) {
       form.onsubmit = function() {
-        container.querySelectorAll('.nested-fields').forEach(function(card, i) {
+        let i = 0;
+        container.querySelectorAll('.nested-fields').forEach(function(card) {
+          const destroyMarker = card.querySelector('.destroy-marker');
+          // 削除予定（_destroy=1）のカードは採番から除外して番号の飛びを防ぐ
+          if (destroyMarker && destroyMarker.value === '1') return;
           const pos = card.querySelector('.position-field');
           if (pos) pos.value = i;
+          i++;
         });
       };
     }

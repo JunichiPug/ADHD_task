@@ -107,12 +107,17 @@
   function computeProgress(id) {
     const data = routineData[id];
     const totalSec = (data.total || 0) * 60;
-    const raw = localStorage.getItem(`routine_${id}_remaining_seconds`);
-    let remaining = parseInt(raw, 10);
-    const started = raw !== null && !isNaN(remaining);
-    if (!started) remaining = totalSec;
-    remaining = Math.max(0, Math.min(remaining, totalSec));
-    const elapsed = totalSec - remaining;
+    // 経過秒を保存する方式。旧キー（残り秒）からはフォールバックで移行する。
+    const raw = localStorage.getItem(`routine_${id}_elapsed_seconds`);
+    let elapsed = parseInt(raw, 10);
+    let started = raw !== null && !isNaN(elapsed);
+    if (!started) {
+      const legacy = parseInt(localStorage.getItem(`routine_${id}_remaining_seconds`), 10);
+      if (!isNaN(legacy)) { elapsed = totalSec - legacy; started = true; }
+    }
+    if (!started) elapsed = 0;
+    elapsed = Math.max(0, Math.min(elapsed, totalSec));
+    const remaining = totalSec - elapsed;
 
     // 経過秒に完全に収まったタスクを「完了」とカウント
     let acc = 0, completed = 0;
@@ -178,8 +183,9 @@
       btn.onclick = () => {
         if (!window.confirm("進行中のタスクを本当にリセットしますか？")) return;
         const id = btn.dataset.routineId;
-        localStorage.removeItem(`routine_${id}_remaining_seconds`);
-        localStorage.removeItem(`routine_${id}_task_seconds`); // 旧キーの掃除
+        localStorage.removeItem(`routine_${id}_elapsed_seconds`);
+        localStorage.removeItem(`routine_${id}_remaining_seconds`); // 旧キーの掃除
+        localStorage.removeItem(`routine_${id}_task_seconds`);      // 旧キーの掃除
         updateCard(id);
       };
     });
