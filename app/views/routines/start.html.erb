@@ -97,7 +97,9 @@
     if (!ctx) return;
 
     const routineId = "<%= @routine.id %>";
-    const KEY_TIME = `routine_${routineId}_remaining_seconds`;
+    // 経過秒を保存する（合計が変わっても経過を維持できる）。旧キーは残り秒。
+    const KEY_ELAPSED = `routine_${routineId}_elapsed_seconds`;
+    const KEY_LEGACY  = `routine_${routineId}_remaining_seconds`;
 
     const originalDurations = <%= raw @tasks.map { |t| t.duration.to_i }.to_json %>; // 分
     const taskLabels = <%= raw @tasks.map(&:title).to_json %>;
@@ -108,10 +110,15 @@
     const taskDurations = originalDurations.map(d => d * 60); // 秒
     const defaultTotalSeconds = taskDurations.reduce((a, b) => a + b, 0);
 
-    let totalSeconds = parseInt(localStorage.getItem(KEY_TIME), 10);
-    if (isNaN(totalSeconds) || totalSeconds > defaultTotalSeconds) {
-      totalSeconds = defaultTotalSeconds;
+    // 経過秒を読み込む。旧キー（残り秒）しか無い場合は経過＝合計−残りで移行する。
+    let elapsedStored = parseInt(localStorage.getItem(KEY_ELAPSED), 10);
+    if (isNaN(elapsedStored)) {
+      const legacyRemaining = parseInt(localStorage.getItem(KEY_LEGACY), 10);
+      elapsedStored = isNaN(legacyRemaining) ? 0 : (defaultTotalSeconds - legacyRemaining);
+      localStorage.removeItem(KEY_LEGACY);
     }
+    elapsedStored = Math.max(0, Math.min(elapsedStored, defaultTotalSeconds));
+    let totalSeconds = defaultTotalSeconds - elapsedStored; // 内部は残り秒で扱う
 
     const timerElement = document.getElementById('total-timer');
     const currentTaskElement = document.getElementById('current-task-title');
@@ -234,11 +241,13 @@
     }
 
     function saveState() {
-      localStorage.setItem(KEY_TIME, totalSeconds);
+      // 経過秒で保存（合計が変わっても経過を維持できる）
+      localStorage.setItem(KEY_ELAPSED, defaultTotalSeconds - totalSeconds);
     }
 
     function clearStorage() {
-      localStorage.removeItem(KEY_TIME);
+      localStorage.removeItem(KEY_ELAPSED);
+      localStorage.removeItem(KEY_LEGACY);
     }
 
     function finishRoutine() {
