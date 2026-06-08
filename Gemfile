@@ -7,6 +7,9 @@ gem "sprockets-rails"
 # Use postgresql as the database for Active Record
 
 gem "devise"
+# Google アカウントでのログイン（既存のメール/パスワード認証と併用）
+gem "omniauth-google-oauth2"
+gem "omniauth-rails_csrf_protection"
 
 gem "pg", "~> 1.1"
 # Use the Puma web server [https://github.com/puma/puma]
