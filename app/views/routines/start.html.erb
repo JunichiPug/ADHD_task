@@ -5,7 +5,7 @@
       <div class="flex items-center gap-4"></div>
     </header>
 
-    <main class="flex-grow flex flex-col items-center justify-start px-container-padding pt-2 pb-stack-gap-lg max-w-2xl mx-auto w-full">
+    <main class="flex-grow flex flex-col items-center justify-start px-container-padding pt-2 pb-[calc(96px+env(safe-area-inset-bottom))] max-w-2xl mx-auto w-full">
 
       <div class="text-center mb-6">
         <h1 class="text-xl font-bold text-on-surface tracking-wide"><%= @routine.title %></h1>
@@ -71,7 +71,7 @@
       </div>
     </main>
 
-  <nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center py-stack-gap-sm bg-surface-container border-t border-surface-variant shadow-sm">
+  <nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center pt-stack-gap-sm pb-[calc(12px+env(safe-area-inset-bottom))] bg-surface-container border-t border-surface-variant shadow-sm">
     <%= link_to memos_path, id: "memo-nav-link", class: "flex flex-col items-center justify-center text-outline px-6 py-2 transition-all duration-150 hover:text-primary" do %>
       <span class="material-symbols-outlined">note_alt</span>
       <span class="text-sm font-semibold mt-1">メモ帳</span>
