@@ -3,6 +3,11 @@
 
     <header class="w-full top-0 bg-surface dark:bg-on-background flex justify-between items-center px-container-padding py-4 z-40">
       <div class="flex items-center gap-4"></div>
+      <button id="sound-toggle" type="button" aria-label="効果音の切り替え"
+              class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface-container text-on-surface-variant active:scale-95 transition-all">
+        <span id="sound-icon" class="material-symbols-outlined text-xl">volume_up</span>
+        <span id="sound-label" class="text-label-sm font-semibold">音 ON</span>
+      </button>
     </header>
 
     <main class="flex-grow flex flex-col items-center justify-start px-container-padding pt-2 pb-[calc(96px+env(safe-area-inset-bottom))] max-w-2xl mx-auto w-full">
@@ -87,6 +92,7 @@
 (() => {
   let timerId = null;
   let chartInstance = null;
+  let resetTimeoutId = null; // 完了後の自動リセット用
 
   // ズレ対策用の変数
   let lastTick = null;
@@ -125,6 +131,64 @@
     const startBtn = document.getElementById('start-btn');
     const pauseBtn = document.getElementById('pause-btn');
     const pills = Array.from(document.querySelectorAll('#task-pills .task-pill'));
+
+    // --- 効果音（Web Audioで「ピッ」を合成。音声ファイル不要）-----------------
+    const SOUND_KEY = 'routine_sound_enabled';
+    let soundEnabled = localStorage.getItem(SOUND_KEY) !== 'off'; // 既定はON
+    let audioCtx = null;
+    let lastTaskIdx = null; // タスク切替の検知用（前回の現在タスク）
+
+    const soundToggle = document.getElementById('sound-toggle');
+    const soundIcon = document.getElementById('sound-icon');
+    const soundLabel = document.getElementById('sound-label');
+
+    // iOS対策：必ずユーザー操作（はじめる/トグル）の中で呼んで音声を有効化する
+    function unlockAudio() {
+      if (!soundEnabled) return;
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return;
+      if (!audioCtx) audioCtx = new AC();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+    }
+
+    // 「ピッ」を times 回鳴らす（短い高音）
+    function beep(times = 1) {
+      if (!soundEnabled || !audioCtx) return;
+      const dur = 0.12; // 1音の長さ(秒)
+      const gap = 0.18; // 音の間隔(秒)
+      for (let i = 0; i < times; i++) {
+        const t = audioCtx.currentTime + i * gap;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = 880; // 高めの「ピッ」
+        gain.gain.setValueAtTime(0.0001, t);
+        gain.gain.exponentialRampToValueAtTime(0.3, t + 0.01);
+        gain.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(t);
+        osc.stop(t + dur);
+      }
+    }
+
+    function renderSoundToggle() {
+      if (!soundToggle) return;
+      soundIcon.textContent = soundEnabled ? 'volume_up' : 'volume_off';
+      soundLabel.textContent = soundEnabled ? '音 ON' : '音 OFF';
+      soundToggle.style.opacity = soundEnabled ? '1' : '0.5';
+    }
+
+    if (soundToggle) {
+      // onclick代入でTurbo再訪問時の二重登録を防ぐ
+      soundToggle.onclick = () => {
+        soundEnabled = !soundEnabled;
+        localStorage.setItem(SOUND_KEY, soundEnabled ? 'on' : 'off');
+        renderSoundToggle();
+        if (soundEnabled) { unlockAudio(); beep(1); } // ONにした合図に1回鳴らす
+      };
+    }
+    renderSoundToggle();
 
     // 経過秒（実数）と、15秒刻みに丸めた桜色の長さ
     function elapsedSeconds() {
@@ -203,6 +267,9 @@
 
     function updateCurrentTask() {
       const idx = currentTaskIndex();
+      // タスクが1つ先に進んだ＝前のタスクが終わった合図に「ピッ」（最後の完了は3回側で鳴らす）
+      if (lastTaskIdx !== null && idx >= 0 && idx > lastTaskIdx) beep(1);
+      lastTaskIdx = idx;
       currentTaskElement.textContent = idx >= 0 ? taskLabels[idx] : "完了しました 🎉";
       updatePills(idx);
     }
@@ -250,6 +317,22 @@
       localStorage.removeItem(KEY_LEGACY);
     }
 
+    // 初期状態（最初から使える状態）に戻す
+    function resetRoutine() {
+      resetTimeoutId = null;
+      if (!chartInstance) return; // ページ離脱後に発火した場合は何もしない
+      if (timerId) { clearInterval(timerId); timerId = null; }
+      clearStorage();
+      totalSeconds = defaultTotalSeconds;
+      exactTotalSeconds = 0;
+      lastTaskIdx = null; // 次回の再生で最初のタスクから検知し直す
+      updateTimerDisplay();
+      updateCurrentTask();
+      updateChart();
+      startBtn.disabled = false;
+      pauseBtn.disabled = true;
+    }
+
     function finishRoutine() {
       if (timerId) { clearInterval(timerId); timerId = null; }
       clearStorage();
@@ -257,8 +340,12 @@
       updateTimerDisplay();
       updateCurrentTask();
       updateChart();
+      beep(3); // 全タスク完了：「ピッピッピッ」
       startBtn.disabled = true;
       pauseBtn.disabled = true;
+      // 完了表示を少し見せてから初期状態へ自動リセット（すぐ再利用できるように）
+      if (resetTimeoutId) clearTimeout(resetTimeoutId);
+      resetTimeoutId = setTimeout(resetRoutine, 2500);
     }
 
     // ★ ズレないカウントダウン処理
@@ -285,6 +372,7 @@
 
     startBtn.addEventListener('click', () => {
       if (timerId || totalSeconds <= 0) return;
+      unlockAudio(); // ユーザー操作の中で音声を有効化（iOS対策）
       lastTick = Date.now();
       exactTotalSeconds = totalSeconds;
       timerId = setInterval(countDown, 200);
@@ -330,6 +418,7 @@
 
   function cleanup() {
     if (timerId) { clearInterval(timerId); timerId = null; }
+    if (resetTimeoutId) { clearTimeout(resetTimeoutId); resetTimeoutId = null; }
     if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
   }
 
