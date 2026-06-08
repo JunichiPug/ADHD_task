@@ -8,6 +8,14 @@ Rails.application.routes.draw do
     get :start, on: :member
   end
 
+  # メモ帳（買い物・覚書きリスト）
+  resources :memos, only: %i[index create update destroy] do
+    collection do
+      delete :destroy_completed
+      delete :destroy_all
+    end
+  end
+
   get "up" => "rails/health#show", as: :rails_health_check
 
   get "service-worker" => "rails/pwa#service_worker", as: :pwa_service_worker
