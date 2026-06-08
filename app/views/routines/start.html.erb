@@ -64,7 +64,7 @@
       </div>
 
       <div class="w-full grid grid-cols-1 mt-stack-gap-md">
-        <%= link_to routines_path, class: "flex flex-col items-center justify-center gap-1 py-stack-gap-md bg-secondary-fixed-dim text-on-secondary-fixed-variant rounded-xl shadow-sm" do %>
+        <%= link_to routines_path, id: "back-link", class: "flex flex-col items-center justify-center gap-1 py-stack-gap-md bg-secondary-fixed-dim text-on-secondary-fixed-variant rounded-xl shadow-sm" do %>
           <span class="material-symbols-outlined text-3xl">arrow_back</span>
           <span class="text-label-lg">戻る</span>
         <% end %>
@@ -300,13 +300,13 @@
       pauseBtn.disabled = true;
     });
 
-    // メモ帳へ遷移：タイマー作動中なら確認し、はいなら停止してから遷移
-    const memoLink = document.getElementById('memo-nav-link');
-    if (memoLink) {
+    // タイマー作動中の離脱を確認し、はいなら停止してから遷移する共通処理
+    function confirmLeaveWhileRunning(link, message) {
+      if (!link) return;
       // onclick代入でTurbo再訪問時の二重登録を防ぐ
-      memoLink.onclick = (e) => {
+      link.onclick = (e) => {
         if (timerId) {
-          if (!window.confirm("タイマーを止めますか？")) {
+          if (!window.confirm(message)) {
             e.preventDefault();
             return;
           }
@@ -317,6 +317,10 @@
         }
       };
     }
+
+    // メモ帳へ遷移／戻る：タイマー作動中なら確認してから遷移
+    confirmLeaveWhileRunning(document.getElementById('memo-nav-link'), "タイマーを止めますか？");
+    confirmLeaveWhileRunning(document.getElementById('back-link'), "タイマーが止まります！よろしいですか？");
 
     // 初期描画
     updateTimerDisplay();
