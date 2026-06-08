@@ -3,7 +3,7 @@
   <head>
     <title><%= content_for(:title) || "ひびまる" %></title>
 
-    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
     <meta name="theme-color" content="#fbf9f5">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -69,10 +69,10 @@
   </head>
 
   <!-- ここがポイント（画面全体の背景） -->
-  <body class="bg-background text-on-background min-h-screen">
+  <body class="bg-background text-on-background min-h-screen pb-[env(safe-area-inset-bottom)]">
 
     <!-- ヘッダー（全ページ共通） -->
-    <header class="w-full flex justify-between items-center px-6 py-4">
+    <header class="w-full flex justify-between items-center px-6 pt-[calc(1rem+env(safe-area-inset-top))] pb-4">
 
       <!-- 左：アプリ名 -->
       <div class="font-bold text-primary">
