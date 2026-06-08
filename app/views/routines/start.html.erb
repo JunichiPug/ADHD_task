@@ -72,10 +72,10 @@
     </main>
 
   <nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center py-stack-gap-sm bg-surface-container border-t border-surface-variant shadow-sm">
-    <a class="flex flex-col items-center justify-center text-outline px-6 py-2 transition-all duration-150 hover:text-primary" href="#">
+    <%= link_to memos_path, id: "memo-nav-link", class: "flex flex-col items-center justify-center text-outline px-6 py-2 transition-all duration-150 hover:text-primary" do %>
       <span class="material-symbols-outlined">note_alt</span>
       <span class="text-sm font-semibold mt-1">メモ帳</span>
-    </a>
+    <% end %>
   </nav>
 
   </div>
@@ -103,7 +103,7 @@
     const taskLabels = <%= raw @tasks.map(&:title).to_json %>;
     const taskColors = <%= raw task_colors.to_json %>;     // ピンク以外（ピルと共通＝セット）
     const SAKURA = '#f4aecb';     // 桜色（経過分の塗りつぶし）
-    const STEP_SECONDS = 15;      // 15秒ごとに桜色を進める
+    const STEP_SECONDS = 5;       // 5秒ごとに桜色を進める
 
     const taskDurations = originalDurations.map(d => d * 60); // 秒
     const defaultTotalSeconds = taskDurations.reduce((a, b) => a + b, 0);
@@ -290,6 +290,24 @@
       startBtn.disabled = false;
       pauseBtn.disabled = true;
     });
+
+    // メモ帳へ遷移：タイマー作動中なら確認し、はいなら停止してから遷移
+    const memoLink = document.getElementById('memo-nav-link');
+    if (memoLink) {
+      // onclick代入でTurbo再訪問時の二重登録を防ぐ
+      memoLink.onclick = (e) => {
+        if (timerId) {
+          if (!window.confirm("タイマーを止めますか？")) {
+            e.preventDefault();
+            return;
+          }
+          clearInterval(timerId);
+          timerId = null;
+          startBtn.disabled = false;
+          pauseBtn.disabled = true;
+        }
+      };
+    }
 
     // 初期描画
     updateTimerDisplay();
