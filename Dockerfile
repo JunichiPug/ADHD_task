@@ -79,4 +79,6 @@ USER 1000:1000
 ENTRYPOINT ["/rails/bin/docker-entrypoint"]
 
 # Start the server by default, this can be overwritten at runtime
-CMD ["bash", "-c", "bundle exec rails server -b 0.0.0.0 -p $PORT"]
+# ★ entrypoint の db:prepare 条件（$1=./bin/rails, $2=server）に一致させるため正準形で起動する。
+#    ポートは config/puma.rb が ENV["PORT"] を読むため -p 指定は不要。
+CMD ["./bin/rails", "server"]
